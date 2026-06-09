@@ -12,7 +12,7 @@ import androidx.room.PrimaryKey
             entity = Habit::class,
             parentColumns = ["id"],
             childColumns = ["habitId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.Companion.CASCADE
         )
     ],
     indices = [Index("habitId")]
