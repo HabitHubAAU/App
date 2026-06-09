@@ -1,9 +1,10 @@
-package com.habithub
+package com.example.habithub
 
 import android.app.Application
-import com.habithub.data.database.HabitDatabase
+import com.example.habithub.data.database.HabitDatabase
 
-class HabitHubApplication : Application() {
+class HabitHubApplication : Application()
+{
     val database: HabitDatabase by lazy {
         HabitDatabase.getDatabase(this)
     }
