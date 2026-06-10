@@ -1,4 +1,4 @@
-package com.habithub.ui.navigation
+package com.example.habithub.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
