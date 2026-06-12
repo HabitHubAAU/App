@@ -13,6 +13,11 @@ class HabitRepository(
 ) {
     fun getAllHabits(): Flow<List<Habit>> = habitDao.getAllHabits()
 
+    suspend fun insertHabit(habit: Habit) = habitDao.insertHabit(habit)
+    suspend fun updateHabit(habit: Habit) = habitDao.updateHabit(habit)
+    suspend fun deleteHabit(habit: Habit) = habitDao.deleteHabit(habit)
+    suspend fun getHabitById(habitId: Int): Habit? = habitDao.getHabitById(habitId)
+
     fun getTodayCompletions(): Flow<List<HabitCompletion>> {
         val (start, end) = todayBounds()
         return completionDao.getCompletionsForDay(start, end)
