@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -18,25 +20,64 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.habithub.data.repository.HabitRepository
 import com.example.habithub.ui.navigation.Screen
+import com.example.habithub.ui.screen.AddHabitScreen
+import com.example.habithub.ui.screen.AddHabitScreenContent
 import com.example.habithub.ui.theme.HabitHubTheme
+import com.habithub.ui.viewmodel.HabitViewModel
+import com.habithub.ui.viewmodel.HabitViewModelFactory
 
 class MainActivity : ComponentActivity() {
+
+    private val viewModel: HabitViewModel by viewModels {
+        val db = (application as HabitHubApplication).database
+        HabitViewModelFactory(HabitRepository(db.habitDao(), db.completionDao()))
+    }
+
+    private val snackbarHostState = SnackbarHostState()
+    private var stepCount: Int? by mutableStateOf(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         setContent {
             HabitHubTheme {
-                HabitHubApp()
+                HabitHubApp(
+                    viewModel = viewModel,
+                    snackbarHostState = snackbarHostState,
+                    stepCount = stepCount
+                )
             }
         }
     }
 }
 
 @Composable
-fun HabitHubApp() {
+fun HabitHubApp(viewModel: HabitViewModel, snackbarHostState: SnackbarHostState, stepCount: Int?)
+{
     val navController = rememberNavController()
+
+    HabitHubAppContent(
+        viewModel = viewModel,
+        snackbarHostState = snackbarHostState,
+        navController = navController,
+        stepCount = stepCount
+    )
+}
+
+@Composable
+fun HabitHubAppContent(
+    viewModel: HabitViewModel,
+    snackbarHostState: SnackbarHostState,
+    navController: NavHostController,
+    stepCount: Int?
+) {
+    val habits by viewModel.habits.collectAsState()
+    val todayCompletions by viewModel.todayCompletions.collectAsState()
+    val recentCompletions by viewModel.recentCompletions.collectAsState()
+
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
 
@@ -78,9 +119,16 @@ fun HabitHubApp() {
             }
 
             composable(Screen.Add.route) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Add Habit Screen Placeholder")
-                }
+                AddHabitScreenContent(
+                    onAddHabit = { name, desc, emoji, color, days ->
+                        viewModel.addHabit(name, desc, emoji, color, days)
+                    },
+                    onNavigateBack = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Add.route) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             composable(Screen.Stats.route) {

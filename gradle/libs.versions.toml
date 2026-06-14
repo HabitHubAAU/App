@@ -11,7 +11,7 @@ ksp = "2.2.10-2.0.2"
 composeBom = "2024.09.00"
 lifecycleViewModelCompose = "2.8.7"
 navigationCompose = "2.8.5"
-room = "2.6.1"
+room = "2.7.0-alpha11"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,4 +39,3 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-
