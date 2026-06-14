@@ -24,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.habithub.data.model.Habit
-import com.habithub.data.model.Habit
 import com.habithub.ui.viewmodel.HabitViewModel
 
 private val EDIT_PRESET_EMOJIS = listOf(
