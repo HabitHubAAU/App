@@ -1,4 +1,4 @@
-package com.habithub.ui.screen
+package com.example.habithub.ui.screen
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
