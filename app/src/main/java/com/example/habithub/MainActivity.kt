@@ -25,8 +25,8 @@ import com.example.habithub.ui.navigation.Screen
 import com.example.habithub.ui.screen.AddHabitScreen
 import com.example.habithub.ui.screen.AddHabitScreenContent
 import com.example.habithub.ui.theme.HabitHubTheme
-import com.habithub.ui.viewmodel.HabitViewModel
-import com.habithub.ui.viewmodel.HabitViewModelFactory
+import com.example.habithub.ui.viewmodel.HabitViewModel
+import com.example.habithub.ui.viewmodel.HabitViewModelFactory
 
 class MainActivity : ComponentActivity() {
 

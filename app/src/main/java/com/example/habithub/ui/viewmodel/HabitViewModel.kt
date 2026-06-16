@@ -1,4 +1,4 @@
-package com.habithub.ui.viewmodel
+package com.example.habithub.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
