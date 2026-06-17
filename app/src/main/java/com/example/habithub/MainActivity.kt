@@ -21,6 +21,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.habithub.HabitHubApplication
 import com.example.habithub.data.model.Habit
+import com.example.habithub.data.preferences.ThemeMode
+import com.example.habithub.data.preferences.ThemePreference
 import com.example.habithub.data.repository.HabitRepository
 import com.example.habithub.sensor.ShakeDetector
 import com.example.habithub.sensor.StepCounterSensor
@@ -34,6 +36,8 @@ import com.example.habithub.ui.screen.StatsScreen
 import com.example.habithub.ui.theme.HabitHubTheme
 import com.example.habithub.ui.viewmodel.HabitViewModel
 import com.example.habithub.ui.viewmodel.HabitViewModelFactory
+import com.example.habithub.ui.viewmodel.ThemeViewModel
+import com.example.habithub.ui.viewmodel.ThemeViewModelFactory
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -41,6 +45,10 @@ class MainActivity : ComponentActivity() {
     private val viewModel: HabitViewModel by viewModels {
         val db = (application as HabitHubApplication).database
         HabitViewModelFactory(HabitRepository(db.habitDao(), db.completionDao()))
+    }
+
+    private val themeViewModel: ThemeViewModel by viewModels {
+        ThemeViewModelFactory(ThemePreference(applicationContext))
     }
 
     private lateinit var sensorManager: SensorManager
@@ -82,11 +90,15 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            HabitHubTheme {
+            val themeMode by themeViewModel.themeMode.collectAsState()
+            val isDarkTheme = themeMode == ThemeMode.DARK
+            HabitHubTheme(darkTheme = isDarkTheme, dynamicColor = false) {
                 HabitHubApp(
                     viewModel = viewModel,
                     snackbarHostState = snackbarHostState,
-                    stepCount = stepCount
+                    stepCount = stepCount,
+                    isDarkTheme = isDarkTheme,
+                    onToggleTheme = { themeViewModel.toggleTheme() }
                 )
             }
         }
@@ -111,7 +123,9 @@ class MainActivity : ComponentActivity() {
 fun HabitHubApp(
     viewModel: HabitViewModel,
     snackbarHostState: SnackbarHostState,
-    stepCount: Int?
+    stepCount: Int?,
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -119,7 +133,9 @@ fun HabitHubApp(
         viewModel = viewModel,
         snackbarHostState = snackbarHostState,
         navController = navController,
-        stepCount = stepCount
+        stepCount = stepCount,
+        isDarkTheme = isDarkTheme,
+        onToggleTheme = onToggleTheme
     )
 }
 
@@ -128,7 +144,9 @@ fun HabitHubAppContent(
     viewModel: HabitViewModel,
     snackbarHostState: SnackbarHostState,
     navController: NavHostController,
-    stepCount: Int?
+    stepCount: Int?,
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit
 ) {
     val habits by viewModel.habits.collectAsState()
     val todayCompletions by viewModel.todayCompletions.collectAsState()
@@ -176,7 +194,9 @@ fun HabitHubAppContent(
                     onHabitLongClick = { habit ->
                         navController.navigate(Screen.Edit.route(habit.id))
                     },
-                    stepCount = stepCount
+                    stepCount = stepCount,
+                    isDarkTheme = isDarkTheme,
+                    onToggleTheme = onToggleTheme
                 )
             }
             composable(Screen.Add.route) {

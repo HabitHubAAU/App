@@ -16,8 +16,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.*
@@ -44,7 +46,9 @@ fun HomeScreen(
     viewModel: HabitViewModel,
     onHabitClick: (Habit) -> Unit,
     onHabitLongClick: (Habit) -> Unit,
-    stepCount: Int?
+    stepCount: Int?,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {}
 ) {
     val habits by viewModel.sortedHabits.collectAsState()
     val todayCompletions by viewModel.todayCompletions.collectAsState()
@@ -59,7 +63,9 @@ fun HomeScreen(
         onHabitLongClick = onHabitLongClick,
         sortOrder = sortOrder,
         onSortOrderChange = { viewModel.setSortOrder(it) },
-        stepCount = stepCount
+        stepCount = stepCount,
+        isDarkTheme = isDarkTheme,
+        onToggleTheme = onToggleTheme
     )
 }
 
@@ -74,7 +80,9 @@ fun HomeScreenContent(
     onHabitLongClick: (Habit) -> Unit = {},
     sortOrder: SortOrder = SortOrder.DEFAULT,
     onSortOrderChange: (SortOrder) -> Unit = {},
-    stepCount: Int? = null
+    stepCount: Int? = null,
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {}
 ) {
     val dateLabel = remember {
         SimpleDateFormat("EEEE, MMMM d", Locale.getDefault()).format(Date())
@@ -102,6 +110,13 @@ fun HomeScreenContent(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onToggleTheme) {
+                        Icon(
+                            imageVector = if (isDarkTheme) Icons.Filled.LightMode else Icons.Filled.DarkMode,
+                            contentDescription = "Toggle theme",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                     Box {
                         IconButton(onClick = { showSortMenu = true }) {
                             Icon(
