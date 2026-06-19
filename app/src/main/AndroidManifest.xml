@@ -6,9 +6,9 @@
     <application
         android:name=".HabitHubApplication"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/habithub_logo"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/habithub_logo"
         android:supportsRtl="true"
         android:theme="@style/Theme.HabitHub">
         <activity
