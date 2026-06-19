@@ -1,11 +1,16 @@
 package com.example.habithub
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.hardware.SensorManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -57,6 +62,25 @@ class MainActivity : ComponentActivity() {
 
     private val snackbarHostState = SnackbarHostState()
     private var stepCount: Int? by mutableStateOf(null)
+    private var hasActivityRecognitionPermission: Boolean = false
+
+    private val activityRecognitionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        hasActivityRecognitionPermission = granted
+        if (granted) {
+            val hasStepSensor = StepCounterSensor.register(sensorManager, stepCounterSensor)
+            if (!hasStepSensor) stepCount = null
+        } else {
+            stepCount = null
+            lifecycleScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = "Permission needed to show step count",
+                    duration = SnackbarDuration.Short
+                )
+            }
+        }
+    }
 
     private val motivationalQuotes = listOf(
         "You are one habit away from a different life.",
@@ -107,8 +131,26 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         ShakeDetector.register(sensorManager, shakeDetector)
-        val hasStepSensor = StepCounterSensor.register(sensorManager, stepCounterSensor)
-        if (!hasStepSensor) stepCount = null
+        ensureActivityRecognitionPermissionAndRegister()
+    }
+
+    private fun ensureActivityRecognitionPermissionAndRegister() {
+        val required = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+        if (!required) {
+            hasActivityRecognitionPermission = true
+        } else {
+            hasActivityRecognitionPermission = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACTIVITY_RECOGNITION
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (hasActivityRecognitionPermission) {
+            val hasStepSensor = StepCounterSensor.register(sensorManager, stepCounterSensor)
+            if (!hasStepSensor) stepCount = null
+        } else {
+            activityRecognitionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+        }
     }
 
     override fun onPause() {
