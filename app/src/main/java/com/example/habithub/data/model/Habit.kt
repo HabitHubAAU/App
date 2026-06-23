@@ -11,5 +11,6 @@ data class Habit(
     val emoji: String = "⭐",
     val colorValue: Long = 0xFF6750A4L,
     val targetDays: Int = 0b1111111,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val category: String = "hobby"
 )

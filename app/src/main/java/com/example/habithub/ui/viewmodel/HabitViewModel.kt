@@ -44,7 +44,7 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         _sortOrder.value = order
     }
 
-    fun addHabit(name: String, description: String, emoji: String, colorValue: Long, targetDays: Int) {
+    fun addHabit(name: String, description: String, emoji: String, colorValue: Long, targetDays: Int, category: String = "hobby") {
         viewModelScope.launch {
             repository.insertHabit(
                 Habit(
@@ -52,7 +52,8 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
                     description = description.trim(),
                     emoji = emoji,
                     colorValue = colorValue,
-                    targetDays = targetDays
+                    targetDays = targetDays,
+                    category = category
                 )
             )
         }
