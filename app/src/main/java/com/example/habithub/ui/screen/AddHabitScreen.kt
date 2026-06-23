@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -139,8 +140,8 @@ fun AddHabitScreenContent(
             // Color picker
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Color", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    PRESET_COLORS.forEach { color ->
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    items(PRESET_COLORS) { color ->
                         val selected = color == selectedColor
                         Box(
                             modifier = Modifier
@@ -169,8 +170,8 @@ fun AddHabitScreenContent(
             // Day selector
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Repeat on", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    DAY_LABELS.forEachIndexed { index, label ->
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    itemsIndexed(DAY_LABELS) { index, label ->
                         val isSelected = (selectedDays and (1 shl index)) != 0
                         FilterChip(
                             selected = isSelected,
