@@ -4,11 +4,15 @@ Eine native Android-App zum Tracking täglicher Gewohnheiten. Sie hilft Userinne
 
 ## Team
 
-| Mitglied | Zuständigkeit |
+Das Projekt wurde gemeinsam von allen drei Teammitgliedern entwickelt. Aufgaben wurden iterativ verteilt und über Bereichsgrenzen hinweg zusammen bearbeitet — jede:r hat in mehreren Schichten der App Beiträge geleistet. Die folgenden Schwerpunkte spiegeln das Hauptinteresse der einzelnen Personen wider:
+
+| Mitglied | Schwerpunkt |
 |---|---|
-| Anja | Datenebene (Entities, Room-DAOs, Repository, Persistenz) |
-| Stefan | Anwendungslogik (ViewModels, Sensor-Integration, Screen-Verknüpfung) |
-| Sonja | UI/UX (Theme, Navigation, Screens, visueller Feinschliff) |
+| Anja | Datenebene und Theme-Persistenz (Room-Setup, DataStore, Theme-Integration) |
+| Stefan | Anwendungslogik und Sensoren (ViewModels, Step-Counter, Shake-Detection) |
+| Sonja | UI-Aufbau und Screens (Navigation, Stats, Detail, MainActivity-Verkabelung) |
+
+Eine vollständige Aufstellung der Beiträge ist in der Git-Historie nachvollziehbar.
 
 ## Was die App kann
 
