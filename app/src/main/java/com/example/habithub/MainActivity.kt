@@ -37,6 +37,7 @@ import com.example.habithub.ui.screen.DetailScreen
 import com.example.habithub.ui.screen.EditHabitScreen
 import com.example.habithub.ui.screen.HomeScreen
 import com.example.habithub.ui.screen.HomeScreenContent
+import com.example.habithub.ui.screen.PulseScreen
 import com.example.habithub.ui.screen.StatsScreen
 import com.example.habithub.ui.theme.HabitHubTheme
 import com.example.habithub.ui.viewmodel.HabitViewModel
@@ -238,13 +239,14 @@ fun HabitHubAppContent(
                     },
                     stepCount = stepCount,
                     isDarkTheme = isDarkTheme,
-                    onToggleTheme = onToggleTheme
+                    onToggleTheme = onToggleTheme,
+                    onPulseClick = { navController.navigate(Screen.Pulse.route) }
                 )
             }
             composable(Screen.Add.route) {
                 AddHabitScreenContent(
-                    onAddHabit = { name, desc, emoji, color, days ->
-                        viewModel.addHabit(name, desc, emoji, color, days)
+                    onAddHabit = { name, desc, emoji, color, days, category ->
+                        viewModel.addHabit(name, desc, emoji, color, days, category)
                     },
                     onNavigateBack = {
                         navController.navigate(Screen.Home.route) {
@@ -269,6 +271,9 @@ fun HabitHubAppContent(
                         navController.navigate(Screen.Edit.route(id))
                     }
                 )
+            }
+            composable(Screen.Pulse.route) {
+                PulseScreen(onNavigateBack = { navController.popBackStack() })
             }
             composable(
                 route = Screen.Edit.route,

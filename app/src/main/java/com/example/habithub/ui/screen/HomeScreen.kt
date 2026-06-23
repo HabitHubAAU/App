@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,12 +35,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Favorite
 import com.example.habithub.data.model.Habit
 import com.example.habithub.ui.theme.HabitHubTheme
 import com.example.habithub.ui.viewmodel.HabitViewModel
 import com.example.habithub.ui.viewmodel.SortOrder
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.runtime.mutableIntStateOf
 
 @Composable
 fun HomeScreen(
@@ -48,7 +51,8 @@ fun HomeScreen(
     onHabitLongClick: (Habit) -> Unit,
     stepCount: Int?,
     isDarkTheme: Boolean = false,
-    onToggleTheme: () -> Unit = {}
+    onToggleTheme: () -> Unit = {},
+    onPulseClick: () -> Unit = {}
 ) {
     val habits by viewModel.sortedHabits.collectAsState()
     val todayCompletions by viewModel.todayCompletions.collectAsState()
@@ -65,9 +69,13 @@ fun HomeScreen(
         onSortOrderChange = { viewModel.setSortOrder(it) },
         stepCount = stepCount,
         isDarkTheme = isDarkTheme,
-        onToggleTheme = onToggleTheme
+        onToggleTheme = onToggleTheme,
+        onPulseClick = onPulseClick
     )
 }
+
+private val HOME_TABS = listOf("Alle", "Study", "Hobby", "Work")
+private val HOME_CATEGORIES = listOf(null, "study", "hobby", "work")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +90,8 @@ fun HomeScreenContent(
     onSortOrderChange: (SortOrder) -> Unit = {},
     stepCount: Int? = null,
     isDarkTheme: Boolean = false,
-    onToggleTheme: () -> Unit = {}
+    onToggleTheme: () -> Unit = {},
+    onPulseClick: () -> Unit = {}
 ) {
     val dateLabel = remember {
         SimpleDateFormat("EEEE, MMMM d", Locale.getDefault()).format(Date())
@@ -95,6 +104,15 @@ fun HomeScreenContent(
         }
     }
     var showSortMenu by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableIntStateOf(0) }
+
+    val filteredHabits = remember(habits, selectedTab) {
+        val cat = HOME_CATEGORIES[selectedTab]
+        if (cat == null) habits else habits.filter { it.category == cat }
+    }
+    val filteredCompletedIds = remember(completedIds, filteredHabits) {
+        completedIds.intersect(filteredHabits.map { it.id }.toSet())
+    }
 
     Scaffold(
         topBar = {
@@ -151,55 +169,69 @@ fun HomeScreenContent(
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            if (habits.isNotEmpty()) {
-                item {
-                    ProgressCard(completed = completedIds.size, total = habits.size)
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            TabRow(selectedTabIndex = selectedTab) {
+                HOME_TABS.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        text = { Text(title) }
+                    )
                 }
             }
-            item {
-                StepCountCard(steps = stepCount ?: 0)
-            }
-            if (habits.isEmpty()) {
-                item {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("No habits yet!", style = MaterialTheme.typography.headlineSmall)
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "Tap Add to create your first habit.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                if (filteredHabits.isNotEmpty()) {
+                    item {
+                        ProgressCard(completed = filteredCompletedIds.size, total = filteredHabits.size)
                     }
                 }
-            } else {
                 item {
-                    Text(
-                        "Tap for details  •  Long-press to edit  •  Swipe right ✓  •  Swipe left 🗑",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                    )
+                    StepCountCard(steps = stepCount ?: 0)
                 }
-                items(habits, key = { it.id }) { habit ->
-                    HabitCard(
-                        habit = habit,
-                        isCompleted = habit.id in completedIds,
-                        onComplete = { onToggleCompletion(habit) },
-                        onDelete = { onDeleteHabit(habit) },
-                        onCardClick = { onHabitClick(habit) },
-                        onCardLongClick = { onHabitLongClick(habit) },
-                        modifier = Modifier.animateItem()
-                    )
+                if (selectedTab == 2) {
+                    item { PulseCard(onPulseClick = onPulseClick) }
                 }
-                item { Spacer(Modifier.height(80.dp)) }
+                if (filteredHabits.isEmpty()) {
+                    item {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("No habits yet!", style = MaterialTheme.typography.headlineSmall)
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "Tap Add to create your first habit.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else {
+                    item {
+                        Text(
+                            "Tap for details  •  Long-press to edit  •  Swipe right ✓  •  Swipe left 🗑",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        )
+                    }
+                    items(filteredHabits, key = { it.id }) { habit ->
+                        HabitCard(
+                            habit = habit,
+                            isCompleted = habit.id in filteredCompletedIds,
+                            onComplete = { onToggleCompletion(habit) },
+                            onDelete = { onDeleteHabit(habit) },
+                            onCardClick = { onHabitClick(habit) },
+                            onCardLongClick = { onHabitLongClick(habit) },
+                            modifier = Modifier.animateItem()
+                        )
+                    }
+                    item { Spacer(Modifier.height(80.dp)) }
+                }
             }
         }
     }
@@ -430,6 +462,47 @@ private fun HabitCardContent(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PulseCard(onPulseClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Filled.Favorite,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Puls messen",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+                Text(
+                    "Kamera-Sensor verwenden",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
+                )
+            }
+            Button(
+                onClick = onPulseClick,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Starten")
             }
         }
     }
