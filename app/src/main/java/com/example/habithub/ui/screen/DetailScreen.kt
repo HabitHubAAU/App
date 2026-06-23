@@ -286,7 +286,12 @@ private fun MonthlyHeatmapCard(data: List<Boolean>, completedColor: Color) {
 
 @Composable
 private fun WeeklyBarChartDetail(weeklyData: List<Boolean>, barColor: Color) {
-    val labels = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+    val dayNames = arrayOf("", "So", "Mo", "Di", "Mi", "Do", "Fr", "Sa")
+    val labels = (6 downTo 0).map { daysAgo ->
+        val cal = java.util.Calendar.getInstance()
+        cal.add(java.util.Calendar.DAY_OF_YEAR, -daysAgo)
+        dayNames[cal.get(java.util.Calendar.DAY_OF_WEEK)]
+    }
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
