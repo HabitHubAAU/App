@@ -55,14 +55,15 @@ fun EditHabitScreen(
 
     EditHabitScreenContent(
         habit = habit,
-        onSaveHabit = { name, description, emoji, color, days ->
+        onSaveHabit = { name, description, emoji, color, days, category ->
             viewModel.updateHabit(
                 habit.copy(
                     name = name.trim(),
                     description = description.trim(),
                     emoji = emoji,
                     colorValue = color,
-                    targetDays = days
+                    targetDays = days,
+                    category = category
                 )
             )
         },
@@ -73,11 +74,13 @@ fun EditHabitScreen(
     )
 }
 
+private val EDIT_CATEGORIES = listOf("hobby" to "Hobby", "study" to "Study", "work" to "Work")
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditHabitScreenContent(
     habit: Habit,
-    onSaveHabit: (String, String, String, Long, Int) -> Unit,
+    onSaveHabit: (String, String, String, Long, Int, String) -> Unit,
     onDeleteHabit: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
@@ -86,6 +89,7 @@ fun EditHabitScreenContent(
     var selectedEmoji by remember { mutableStateOf(habit.emoji) }
     var selectedColor by remember { mutableLongStateOf(habit.colorValue) }
     var selectedDays by remember { mutableIntStateOf(habit.targetDays) }
+    var selectedCategory by remember { mutableStateOf(habit.category) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     if (showDeleteDialog) {
@@ -212,6 +216,20 @@ fun EditHabitScreenContent(
                 }
             }
 
+            // Category selector
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Kategorie", style = MaterialTheme.typography.labelLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    EDIT_CATEGORIES.forEach { (value, label) ->
+                        FilterChip(
+                            selected = selectedCategory == value,
+                            onClick = { selectedCategory = value },
+                            label = { Text(label) }
+                        )
+                    }
+                }
+            }
+
             // Day selector
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Repeat on", style = MaterialTheme.typography.labelLarge)
@@ -259,7 +277,7 @@ fun EditHabitScreenContent(
             Button(
                 onClick = {
                     if (name.isNotBlank()) {
-                        onSaveHabit(name, description, selectedEmoji, selectedColor, selectedDays)
+                        onSaveHabit(name, description, selectedEmoji, selectedColor, selectedDays, selectedCategory)
                         onNavigateBack()
                     }
                 },

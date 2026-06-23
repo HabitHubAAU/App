@@ -44,17 +44,19 @@ fun AddHabitScreen(
     onNavigateBack: () -> Unit
 ) {
     AddHabitScreenContent(
-        onAddHabit = { name, description, emoji, color, days ->
-            viewModel.addHabit(name, description, emoji, color, days)
+        onAddHabit = { name, description, emoji, color, days, category ->
+            viewModel.addHabit(name, description, emoji, color, days, category)
         },
         onNavigateBack = onNavigateBack
     )
 }
 
+private val CATEGORIES = listOf("hobby" to "Hobby", "study" to "Study", "work" to "Work")
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddHabitScreenContent(
-    onAddHabit: (String, String, String, Long, Int) -> Unit,
+    onAddHabit: (String, String, String, Long, Int, String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
@@ -62,6 +64,7 @@ fun AddHabitScreenContent(
     var selectedEmoji by remember { mutableStateOf("⭐") }
     var selectedColor by remember { mutableLongStateOf(0xFF6750A4L) }
     var selectedDays by remember { mutableIntStateOf(0b1111111) }
+    var selectedCategory by remember { mutableStateOf("hobby") }
 
     Scaffold(
         topBar = {
@@ -166,6 +169,20 @@ fun AddHabitScreenContent(
                 }
             }
 
+            // Category selector
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Kategorie", style = MaterialTheme.typography.labelLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CATEGORIES.forEach { (value, label) ->
+                        FilterChip(
+                            selected = selectedCategory == value,
+                            onClick = { selectedCategory = value },
+                            label = { Text(label) }
+                        )
+                    }
+                }
+            }
+
             // Day selector
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Repeat on", style = MaterialTheme.typography.labelLarge)
@@ -222,7 +239,7 @@ fun AddHabitScreenContent(
             Button(
                 onClick = {
                     if (name.isNotBlank()) {
-                        onAddHabit(name, description, selectedEmoji, selectedColor, selectedDays)
+                        onAddHabit(name, description, selectedEmoji, selectedColor, selectedDays, selectedCategory)
                         onNavigateBack()
                     }
                 },
