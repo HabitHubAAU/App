@@ -20,6 +20,7 @@ import com.example.habithub.data.model.Habit
 import com.example.habithub.data.model.HabitCompletion
 import com.example.habithub.ui.theme.HabitHubTheme
 import com.example.habithub.ui.viewmodel.HabitViewModel
+import java.util.Calendar
 
 @Composable
 fun StatsScreen(viewModel: HabitViewModel) {
@@ -260,7 +261,12 @@ private fun MiniStatChip(label: String, value: String, modifier: Modifier = Modi
 
 @Composable
 private fun WeeklyBarChart(weeklyData: List<Boolean>, barColor: Color) {
-    val labels = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+    val dayNames = arrayOf("", "So", "Mo", "Di", "Mi", "Do", "Fr", "Sa")
+    val labels = (6 downTo 0).map { daysAgo ->
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DAY_OF_YEAR, -daysAgo)
+        dayNames[cal.get(Calendar.DAY_OF_WEEK)]
+    }
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
