@@ -263,7 +263,7 @@ fun AddHabitScreenContent(
 fun AddHabitScreenPreview() {
     HabitHubTheme {
         AddHabitScreenContent(
-            onAddHabit = { _, _, _, _, _ -> },
+            onAddHabit = { _, _, _, _, _, _ -> },
             onNavigateBack = {}
         )
     }
