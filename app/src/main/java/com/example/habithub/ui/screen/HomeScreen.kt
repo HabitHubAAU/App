@@ -52,7 +52,8 @@ fun HomeScreen(
     stepCount: Int?,
     isDarkTheme: Boolean = false,
     onToggleTheme: () -> Unit = {},
-    onPulseClick: () -> Unit = {}
+    onPulseClick: () -> Unit = {},
+    onPomodoroClick: () -> Unit = {}
 ) {
     val habits by viewModel.sortedHabits.collectAsState()
     val todayCompletions by viewModel.todayCompletions.collectAsState()
@@ -70,7 +71,8 @@ fun HomeScreen(
         stepCount = stepCount,
         isDarkTheme = isDarkTheme,
         onToggleTheme = onToggleTheme,
-        onPulseClick = onPulseClick
+        onPulseClick = onPulseClick,
+        onPomodoroClick = onPomodoroClick
     )
 }
 
@@ -91,7 +93,8 @@ fun HomeScreenContent(
     stepCount: Int? = null,
     isDarkTheme: Boolean = false,
     onToggleTheme: () -> Unit = {},
-    onPulseClick: () -> Unit = {}
+    onPulseClick: () -> Unit = {},
+    onPomodoroClick: () -> Unit = {}
 ) {
     val dateLabel = remember {
         SimpleDateFormat("EEEE, MMMM d", Locale.getDefault()).format(Date())
@@ -191,6 +194,9 @@ fun HomeScreenContent(
                 }
                 item {
                     StepCountCard(steps = stepCount ?: 0)
+                }
+                if (selectedTab == 1) {
+                    item { PomodoroCard(onPomodoroClick = onPomodoroClick) }
                 }
                 if (selectedTab == 2) {
                     item { PulseCard(onPulseClick = onPulseClick) }
@@ -462,6 +468,42 @@ private fun HabitCardContent(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PomodoroCard(onPomodoroClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("🍅", fontSize = 28.sp)
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Pomodoro-Timer",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Text(
+                    "Fokussiert lernen mit Pausen",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                )
+            }
+            Button(
+                onClick = onPomodoroClick,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+            ) {
+                Text("Starten")
             }
         }
     }

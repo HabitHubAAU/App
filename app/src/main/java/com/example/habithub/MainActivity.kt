@@ -26,6 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.habithub.HabitHubApplication
 import com.example.habithub.data.model.Habit
+import com.example.habithub.data.preferences.PomodoroPreference
 import com.example.habithub.data.preferences.ThemeMode
 import com.example.habithub.data.preferences.ThemePreference
 import com.example.habithub.data.repository.HabitRepository
@@ -44,6 +45,9 @@ import com.example.habithub.ui.viewmodel.HabitViewModel
 import com.example.habithub.ui.viewmodel.HabitViewModelFactory
 import com.example.habithub.ui.viewmodel.ThemeViewModel
 import com.example.habithub.ui.viewmodel.ThemeViewModelFactory
+import com.example.habithub.ui.viewmodel.PomodoroViewModel
+import com.example.habithub.ui.viewmodel.PomodoroViewModelFactory
+import com.example.habithub.ui.screen.PomodoroScreen
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -55,6 +59,10 @@ class MainActivity : ComponentActivity() {
 
     private val themeViewModel: ThemeViewModel by viewModels {
         ThemeViewModelFactory(ThemePreference(applicationContext))
+    }
+
+    private val pomodoroViewModel: PomodoroViewModel by viewModels {
+        PomodoroViewModelFactory(PomodoroPreference(applicationContext))
     }
 
     private lateinit var sensorManager: SensorManager
@@ -123,7 +131,8 @@ class MainActivity : ComponentActivity() {
                     snackbarHostState = snackbarHostState,
                     stepCount = stepCount,
                     isDarkTheme = isDarkTheme,
-                    onToggleTheme = { themeViewModel.toggleTheme() }
+                    onToggleTheme = { themeViewModel.toggleTheme() },
+                    pomodoroViewModel = pomodoroViewModel
                 )
             }
         }
@@ -168,7 +177,8 @@ fun HabitHubApp(
     snackbarHostState: SnackbarHostState,
     stepCount: Int?,
     isDarkTheme: Boolean,
-    onToggleTheme: () -> Unit
+    onToggleTheme: () -> Unit,
+    pomodoroViewModel: PomodoroViewModel
 ) {
     val navController = rememberNavController()
 
@@ -178,7 +188,8 @@ fun HabitHubApp(
         navController = navController,
         stepCount = stepCount,
         isDarkTheme = isDarkTheme,
-        onToggleTheme = onToggleTheme
+        onToggleTheme = onToggleTheme,
+        pomodoroViewModel = pomodoroViewModel
     )
 }
 
@@ -189,7 +200,8 @@ fun HabitHubAppContent(
     navController: NavHostController,
     stepCount: Int?,
     isDarkTheme: Boolean,
-    onToggleTheme: () -> Unit
+    onToggleTheme: () -> Unit,
+    pomodoroViewModel: PomodoroViewModel
 ) {
     val habits by viewModel.habits.collectAsState()
     val todayCompletions by viewModel.todayCompletions.collectAsState()
@@ -240,7 +252,8 @@ fun HabitHubAppContent(
                     stepCount = stepCount,
                     isDarkTheme = isDarkTheme,
                     onToggleTheme = onToggleTheme,
-                    onPulseClick = { navController.navigate(Screen.Pulse.route) }
+                    onPulseClick = { navController.navigate(Screen.Pulse.route) },
+                    onPomodoroClick = { navController.navigate(Screen.Pomodoro.route) }
                 )
             }
             composable(Screen.Add.route) {
@@ -274,6 +287,12 @@ fun HabitHubAppContent(
             }
             composable(Screen.Pulse.route) {
                 PulseScreen(onNavigateBack = { navController.popBackStack() })
+            }
+            composable(Screen.Pomodoro.route) {
+                PomodoroScreen(
+                    viewModel = pomodoroViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
             composable(
                 route = Screen.Edit.route,

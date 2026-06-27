@@ -19,4 +19,5 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
         fun route(id: Int) = "edit/$id"
     }
     object Pulse  : Screen("pulse",            "Puls",   Icons.Filled.Info)
+    object Pomodoro : Screen("pomodoro",       "Pomodoro", Icons.Filled.Info)
 }
