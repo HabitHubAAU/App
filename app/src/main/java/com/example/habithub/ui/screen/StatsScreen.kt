@@ -18,9 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.habithub.data.model.Habit
 import com.example.habithub.data.model.HabitCompletion
+import com.example.habithub.ui.component.WeeklyBarChart
 import com.example.habithub.ui.theme.HabitHubTheme
 import com.example.habithub.ui.viewmodel.HabitViewModel
-import java.util.Calendar
 
 @Composable
 fun StatsScreen(viewModel: HabitViewModel) {
@@ -255,44 +255,6 @@ private fun MiniStatChip(label: String, value: String, modifier: Modifier = Modi
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold
             )
-        }
-    }
-}
-
-@Composable
-private fun WeeklyBarChart(weeklyData: List<Boolean>, barColor: Color) {
-    val dayNames = arrayOf("", "So", "Mo", "Di", "Mi", "Do", "Fr", "Sa")
-    val labels = (6 downTo 0).map { daysAgo ->
-        val cal = Calendar.getInstance()
-        cal.add(Calendar.DAY_OF_YEAR, -daysAgo)
-        dayNames[cal.get(Calendar.DAY_OF_WEEK)]
-    }
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        weeklyData.forEachIndexed { index, completed ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .width(30.dp)
-                        .height(44.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(
-                            if (completed) barColor
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        )
-                )
-                Text(
-                    text = labels.getOrElse(index) { "" },
-                    style = MaterialTheme.typography.labelSmall,
-                    fontSize = 9.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
     }
 }
