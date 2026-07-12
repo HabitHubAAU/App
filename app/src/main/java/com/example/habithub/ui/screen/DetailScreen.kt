@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.habithub.data.model.Habit
 import com.example.habithub.data.model.HabitCompletion
+import com.example.habithub.ui.component.WeeklyBarChart
 import com.example.habithub.ui.viewmodel.HabitViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -117,7 +118,13 @@ fun DetailScreenContent(
                             fontWeight = FontWeight.SemiBold
                         )
                         Spacer(Modifier.height(12.dp))
-                        WeeklyBarChartDetail(weeklyData, Color(habit.colorValue))
+                        WeeklyBarChart(
+                            weeklyData = weeklyData,
+                            barColor = Color(habit.colorValue),
+                            barWidth = 36.dp,
+                            barHeight = 56.dp,
+                            labelFontSize = 10.sp
+                        )
                     }
                 }
             }
@@ -279,44 +286,6 @@ private fun MonthlyHeatmapCard(data: List<Boolean>, completedColor: Color) {
                 Spacer(Modifier.width(4.dp))
                 Text("Done", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-    }
-}
-
-@Composable
-private fun WeeklyBarChartDetail(weeklyData: List<Boolean>, barColor: Color) {
-    val dayNames = arrayOf("", "So", "Mo", "Di", "Mi", "Do", "Fr", "Sa")
-    val labels = (6 downTo 0).map { daysAgo ->
-        val cal = java.util.Calendar.getInstance()
-        cal.add(java.util.Calendar.DAY_OF_YEAR, -daysAgo)
-        dayNames[cal.get(java.util.Calendar.DAY_OF_WEEK)]
-    }
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        weeklyData.forEachIndexed { index, completed ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .width(36.dp)
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(
-                            if (completed) barColor
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        )
-                )
-                Text(
-                    text = labels.getOrElse(index) { "" },
-                    style = MaterialTheme.typography.labelSmall,
-                    fontSize = 10.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }
