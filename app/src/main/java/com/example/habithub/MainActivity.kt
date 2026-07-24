@@ -24,12 +24,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.habithub.HabitHubApplication
 import com.example.habithub.data.model.Habit
 import com.example.habithub.data.preferences.PomodoroPreference
 import com.example.habithub.data.preferences.ThemeMode
 import com.example.habithub.data.preferences.ThemePreference
 import com.example.habithub.data.repository.HabitRepository
+import com.example.habithub.notification.HabitNotificationManager
 import com.example.habithub.sensor.ShakeDetector
 import com.example.habithub.sensor.StepCounterSensor
 import com.example.habithub.ui.navigation.Screen
@@ -47,6 +47,7 @@ import com.example.habithub.ui.viewmodel.ThemeViewModel
 import com.example.habithub.ui.viewmodel.ThemeViewModelFactory
 import com.example.habithub.ui.viewmodel.PomodoroViewModel
 import com.example.habithub.ui.viewmodel.PomodoroViewModelFactory
+import com.example.habithub.ui.viewmodel.PomodoroPhase
 import com.example.habithub.ui.screen.PomodoroScreen
 import kotlinx.coroutines.launch
 
@@ -68,10 +69,12 @@ class MainActivity : ComponentActivity() {
     private lateinit var sensorManager: SensorManager
     private lateinit var shakeDetector: ShakeDetector
     private lateinit var stepCounterSensor: StepCounterSensor
+    private lateinit var notificationManager: HabitNotificationManager
 
     private val snackbarHostState = SnackbarHostState()
     private var stepCount: Int? by mutableStateOf(null)
     private var hasActivityRecognitionPermission: Boolean = false
+    private var hasNotificationPermission: Boolean = false
 
     private val activityRecognitionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -85,6 +88,20 @@ class MainActivity : ComponentActivity() {
             lifecycleScope.launch {
                 snackbarHostState.showSnackbar(
                     message = "Permission needed to show step count",
+                    duration = SnackbarDuration.Short
+                )
+            }
+        }
+    }
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        hasNotificationPermission = granted
+        if (!granted) {
+            lifecycleScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = "Notifications disabled",
                     duration = SnackbarDuration.Short
                 )
             }
@@ -109,6 +126,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+        notificationManager = HabitNotificationManager(this)
 
         shakeDetector = ShakeDetector {
             val quote = motivationalQuotes.random()
@@ -132,7 +150,8 @@ class MainActivity : ComponentActivity() {
                     stepCount = stepCount,
                     isDarkTheme = isDarkTheme,
                     onToggleTheme = { themeViewModel.toggleTheme() },
-                    pomodoroViewModel = pomodoroViewModel
+                    pomodoroViewModel = pomodoroViewModel,
+                    notificationManager = notificationManager
                 )
             }
         }
@@ -142,6 +161,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         ShakeDetector.register(sensorManager, shakeDetector)
         ensureActivityRecognitionPermissionAndRegister()
+        ensureNotificationPermission()
     }
 
     private fun ensureActivityRecognitionPermissionAndRegister() {
@@ -163,13 +183,27 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun ensureNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            hasNotificationPermission = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (!hasNotificationPermission) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        } else {
+            hasNotificationPermission = true
+        }
+    }
+
     override fun onPause() {
         super.onPause()
         ShakeDetector.unregister(sensorManager, shakeDetector)
         StepCounterSensor.unregister(sensorManager, stepCounterSensor)
     }
 }
-
 
 @Composable
 fun HabitHubApp(
@@ -178,7 +212,8 @@ fun HabitHubApp(
     stepCount: Int?,
     isDarkTheme: Boolean,
     onToggleTheme: () -> Unit,
-    pomodoroViewModel: PomodoroViewModel
+    pomodoroViewModel: PomodoroViewModel,
+    notificationManager: HabitNotificationManager
 ) {
     val navController = rememberNavController()
 
@@ -189,7 +224,8 @@ fun HabitHubApp(
         stepCount = stepCount,
         isDarkTheme = isDarkTheme,
         onToggleTheme = onToggleTheme,
-        pomodoroViewModel = pomodoroViewModel
+        pomodoroViewModel = pomodoroViewModel,
+        notificationManager = notificationManager
     )
 }
 
@@ -201,11 +237,47 @@ fun HabitHubAppContent(
     stepCount: Int?,
     isDarkTheme: Boolean,
     onToggleTheme: () -> Unit,
-    pomodoroViewModel: PomodoroViewModel
+    pomodoroViewModel: PomodoroViewModel,
+    notificationManager: HabitNotificationManager
 ) {
     val habits by viewModel.habits.collectAsState()
     val todayCompletions by viewModel.todayCompletions.collectAsState()
     val recentCompletions by viewModel.recentCompletions.collectAsState()
+    val currentPomodoroPhase by pomodoroViewModel.phase.collectAsState()
+
+    var initialLoad by remember { mutableStateOf(true) }
+    var previousCompletionsSize by remember { mutableIntStateOf(0) }
+    var initialPhaseLoad by remember { mutableStateOf(true) }
+
+    LaunchedEffect(todayCompletions) {
+        if (initialLoad) {
+            initialLoad = false
+        } else if (todayCompletions.size > previousCompletionsSize) {
+            notificationManager.showNotification(
+                title = "Habit Completed!",
+                message = "Great job! Keep up the good work."
+            )
+        }
+        previousCompletionsSize = todayCompletions.size
+    }
+
+    LaunchedEffect(currentPomodoroPhase) {
+        if (initialPhaseLoad) {
+            initialPhaseLoad = false
+        } else {
+            if (currentPomodoroPhase == PomodoroPhase.BREAK) {
+                notificationManager.showNotification(
+                    title = "Focus session complete!",
+                    message = "Time for a well-deserved break."
+                )
+            } else {
+                notificationManager.showNotification(
+                    title = "Break is over!",
+                    message = "Ready to focus again? Let's go."
+                )
+            }
+        }
+    }
 
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
@@ -260,6 +332,11 @@ fun HabitHubAppContent(
                 AddHabitScreenContent(
                     onAddHabit = { name, desc, emoji, color, days, category ->
                         viewModel.addHabit(name, desc, emoji, color, days, category)
+
+                        notificationManager.showNotification(
+                            title = "New Habit Created!",
+                            message = "$emoji $name was successfully added."
+                        )
                     },
                     onNavigateBack = {
                         navController.navigate(Screen.Home.route) {
