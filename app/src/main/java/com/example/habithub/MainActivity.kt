@@ -11,6 +11,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,6 +34,7 @@ import com.example.habithub.data.repository.HabitRepository
 import com.example.habithub.notification.HabitNotificationManager
 import com.example.habithub.sensor.ShakeDetector
 import com.example.habithub.sensor.StepCounterSensor
+import com.example.habithub.ui.component.ConfettiEffect
 import com.example.habithub.ui.navigation.Screen
 import com.example.habithub.ui.screen.AddHabitScreenContent
 import com.example.habithub.ui.screen.DetailScreen
@@ -248,6 +251,7 @@ fun HabitHubAppContent(
     var initialLoad by remember { mutableStateOf(true) }
     var previousCompletionsSize by remember { mutableIntStateOf(0) }
     var initialPhaseLoad by remember { mutableStateOf(true) }
+    var showConfetti by remember { mutableStateOf(false) }
 
     LaunchedEffect(todayCompletions) {
         if (initialLoad) {
@@ -257,6 +261,7 @@ fun HabitHubAppContent(
                 title = "Habit Completed!",
                 message = "Great job! Keep up the good work."
             )
+            showConfetti = true
         }
         previousCompletionsSize = todayCompletions.size
     }
@@ -284,107 +289,113 @@ fun HabitHubAppContent(
     val bottomNavScreens = listOf(Screen.Home, Screen.Add, Screen.Stats)
     val showBottomBar = currentRoute in bottomNavScreens.map { it.route }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = {
-            if (showBottomBar) {
-                NavigationBar {
-                    bottomNavScreens.forEach { screen ->
-                        NavigationBarItem(
-                            selected = currentRoute == screen.route,
-                            onClick = {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = { Icon(screen.icon, contentDescription = screen.label) },
-                            label = { Text(screen.label) }
-                        )
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            bottomBar = {
+                if (showBottomBar) {
+                    NavigationBar {
+                        bottomNavScreens.forEach { screen ->
+                            NavigationBarItem(
+                                selected = currentRoute == screen.route,
+                                onClick = {
+                                    navController.navigate(screen.route) {
+                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                icon = { Icon(screen.icon, contentDescription = screen.label) },
+                                label = { Text(screen.label) }
+                            )
+                        }
                     }
                 }
             }
-        }
-    ) { padding ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Home.route,
-            modifier = Modifier.padding(padding)
-        ) {
-            composable(Screen.Home.route) {
-                HomeScreen(
-                    viewModel = viewModel,
-                    onHabitClick = { habit ->
-                        navController.navigate(Screen.Detail.route(habit.id))
-                    },
-                    onHabitLongClick = { habit ->
-                        navController.navigate(Screen.Edit.route(habit.id))
-                    },
-                    stepCount = stepCount,
-                    isDarkTheme = isDarkTheme,
-                    onToggleTheme = onToggleTheme,
-                    onPulseClick = { navController.navigate(Screen.Pulse.route) },
-                    onPomodoroClick = { navController.navigate(Screen.Pomodoro.route) }
-                )
-            }
-            composable(Screen.Add.route) {
-                AddHabitScreenContent(
-                    onAddHabit = { name, desc, emoji, color, days, category ->
-                        viewModel.addHabit(name, desc, emoji, color, days, category)
+        ) { padding ->
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Home.route,
+                modifier = Modifier.padding(padding)
+            ) {
+                composable(Screen.Home.route) {
+                    HomeScreen(
+                        viewModel = viewModel,
+                        onHabitClick = { habit ->
+                            navController.navigate(Screen.Detail.route(habit.id))
+                        },
+                        onHabitLongClick = { habit ->
+                            navController.navigate(Screen.Edit.route(habit.id))
+                        },
+                        stepCount = stepCount,
+                        isDarkTheme = isDarkTheme,
+                        onToggleTheme = onToggleTheme,
+                        onPulseClick = { navController.navigate(Screen.Pulse.route) },
+                        onPomodoroClick = { navController.navigate(Screen.Pomodoro.route) }
+                    )
+                }
+                composable(Screen.Add.route) {
+                    AddHabitScreenContent(
+                        onAddHabit = { name, desc, emoji, color, days, category ->
+                            viewModel.addHabit(name, desc, emoji, color, days, category)
 
-                        notificationManager.showNotification(
-                            title = "New Habit Created!",
-                            message = "$emoji $name was successfully added."
-                        )
-                    },
-                    onNavigateBack = {
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Add.route) { inclusive = true }
+                            notificationManager.showNotification(
+                                title = "New Habit Created!",
+                                message = "$emoji $name was successfully added."
+                            )
+                        },
+                        onNavigateBack = {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Add.route) { inclusive = true }
+                            }
                         }
-                    }
-                )
+                    )
+                }
+                composable(Screen.Stats.route) {
+                    StatsScreen(viewModel = viewModel)
+                }
+                composable(
+                    route = Screen.Detail.route,
+                    arguments = listOf(navArgument("habitId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val habitId = backStackEntry.arguments?.getInt("habitId") ?: return@composable
+                    DetailScreen(
+                        habitId = habitId,
+                        viewModel = viewModel,
+                        onNavigateBack = { navController.popBackStack() },
+                        onEditHabit = { id ->
+                            navController.navigate(Screen.Edit.route(id))
+                        }
+                    )
+                }
+                composable(Screen.Pulse.route) {
+                    PulseScreen(onNavigateBack = { navController.popBackStack() })
+                }
+                composable(Screen.Pomodoro.route) {
+                    PomodoroScreen(
+                        viewModel = pomodoroViewModel,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    route = Screen.Edit.route,
+                    arguments = listOf(navArgument("habitId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val habitId = backStackEntry.arguments?.getInt("habitId") ?: return@composable
+                    EditHabitScreen(
+                        habitId = habitId,
+                        viewModel = viewModel,
+                        onNavigateBack = { navController.popBackStack() },
+                        onDeleteHabit = { habit ->
+                            viewModel.deleteHabit(habit)
+                        }
+                    )
+                }
             }
-            composable(Screen.Stats.route) {
-                StatsScreen(viewModel = viewModel)
-            }
-            composable(
-                route = Screen.Detail.route,
-                arguments = listOf(navArgument("habitId") { type = NavType.IntType })
-            ) { backStackEntry ->
-                val habitId = backStackEntry.arguments?.getInt("habitId") ?: return@composable
-                DetailScreen(
-                    habitId = habitId,
-                    viewModel = viewModel,
-                    onNavigateBack = { navController.popBackStack() },
-                    onEditHabit = { id ->
-                        navController.navigate(Screen.Edit.route(id))
-                    }
-                )
-            }
-            composable(Screen.Pulse.route) {
-                PulseScreen(onNavigateBack = { navController.popBackStack() })
-            }
-            composable(Screen.Pomodoro.route) {
-                PomodoroScreen(
-                    viewModel = pomodoroViewModel,
-                    onNavigateBack = { navController.popBackStack() }
-                )
-            }
-            composable(
-                route = Screen.Edit.route,
-                arguments = listOf(navArgument("habitId") { type = NavType.IntType })
-            ) { backStackEntry ->
-                val habitId = backStackEntry.arguments?.getInt("habitId") ?: return@composable
-                EditHabitScreen(
-                    habitId = habitId,
-                    viewModel = viewModel,
-                    onNavigateBack = { navController.popBackStack() },
-                    onDeleteHabit = { habit ->
-                        viewModel.deleteHabit(habit)
-                    }
-                )
-            }
+        }
+
+        if (showConfetti) {
+            ConfettiEffect(onAnimationEnd = { showConfetti = false })
         }
     }
 }
