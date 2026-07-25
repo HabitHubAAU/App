@@ -26,6 +26,8 @@ fun SettingsScreen(
     onToggleTheme: () -> Unit,
     notificationsEnabled: Boolean,
     onToggleNotifications: (Boolean) -> Unit,
+    currentLanguage: String,
+    onSelectLanguage: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -69,6 +71,29 @@ fun SettingsScreen(
                     checked = isDarkTheme,
                     onCheckedChange = { onToggleTheme() }
                 )
+            }
+
+            // Sprache
+            SettingsSection(title = stringResource(R.string.section_language)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = currentLanguage == "de",
+                        onClick = { onSelectLanguage("de") },
+                        label = { Text("Deutsch") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = currentLanguage != "de",
+                        onClick = { onSelectLanguage("en") },
+                        label = { Text("English") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
 
             // Benachrichtigungen
@@ -173,6 +198,8 @@ fun SettingsScreenPreview() {
             onToggleTheme = {},
             notificationsEnabled = true,
             onToggleNotifications = {},
+            currentLanguage = "de",
+            onSelectLanguage = {},
             onNavigateBack = {}
         )
     }

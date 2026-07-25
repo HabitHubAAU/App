@@ -1,6 +1,7 @@
 package com.example.habithub
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.SensorManager
 import android.os.Build
@@ -28,6 +29,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.habithub.data.model.Habit
+import com.example.habithub.data.preferences.LocaleHelper
 import com.example.habithub.data.preferences.NotificationPreference
 import com.example.habithub.data.preferences.PomodoroPreference
 import com.example.habithub.data.preferences.ThemeMode
@@ -58,6 +60,7 @@ import com.example.habithub.ui.viewmodel.SettingsViewModelFactory
 import com.example.habithub.ui.screen.PomodoroScreen
 import com.example.habithub.ui.screen.SettingsScreen
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -118,6 +121,10 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleHelper.wrap(newBase))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -388,6 +395,13 @@ fun HabitHubAppContent(
                         onToggleTheme = onToggleTheme,
                         notificationsEnabled = notificationsEnabled,
                         onToggleNotifications = { settingsViewModel.setNotificationsEnabled(it) },
+                        currentLanguage = LocaleHelper.getLanguage(context) ?: Locale.getDefault().language,
+                        onSelectLanguage = { lang ->
+                            if (LocaleHelper.getLanguage(context) != lang) {
+                                LocaleHelper.setLanguage(context, lang)
+                                (context as? ComponentActivity)?.recreate()
+                            }
+                        },
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }

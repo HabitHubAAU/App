@@ -114,6 +114,7 @@
     <string name="section_notifications">Benachrichtigungen</string>
     <string name="notifications">Benachrichtigungen</string>
     <string name="notifications_subtitle">Hinweise beim Abhaken und im Pomodoro-Timer</string>
+    <string name="section_language">Sprache</string>
     <string name="section_about">Über die App</string>
     <string name="version_format">Version %1$s</string>
     <string name="about_tagline">Baue gute Gewohnheiten auf – jeden Tag ein kleiner Schritt.</string>
