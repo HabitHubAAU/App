@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.habithub.MainActivity
+import com.example.habithub.R
 
 class HabitNotificationManager(private val context: Context) {
 
@@ -22,10 +23,10 @@ class HabitNotificationManager(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Habit Reminders",
+                context.getString(R.string.channel_name),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Notifications for habit reminders and updates"
+                description = context.getString(R.string.channel_description)
             }
             notificationManager.createNotificationChannel(channel)
         }

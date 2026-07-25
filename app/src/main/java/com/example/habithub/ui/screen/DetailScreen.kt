@@ -14,9 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.habithub.R
 import com.example.habithub.data.model.Habit
 import com.example.habithub.data.model.HabitCompletion
 import com.example.habithub.ui.component.WeeklyBarChart
@@ -72,12 +74,12 @@ fun DetailScreenContent(
                 title = { Text(habit.name, maxLines = 1) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     IconButton(onClick = onEditHabit) {
-                        Icon(Icons.Filled.Edit, contentDescription = "Edit habit")
+                        Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.cd_edit_habit))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -113,7 +115,7 @@ fun DetailScreenContent(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            "Last 7 days",
+                            stringResource(R.string.last_7_days),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -172,7 +174,7 @@ private fun HabitHeaderCard(habit: Habit) {
                 val since = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
                     .format(Date(habit.createdAt))
                 Text(
-                    "Since $since",
+                    stringResource(R.string.since_format, since),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
                 )
@@ -192,10 +194,10 @@ private fun StatsOverviewRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        DetailStatCard("🔥", "$streak", "Current streak", Modifier.weight(1f))
-        DetailStatCard("🏆", "$bestStreak", "Best streak", Modifier.weight(1f))
-        DetailStatCard("✅", "${(completionRate * 100).toInt()}%", "Rate", Modifier.weight(1f))
-        DetailStatCard("📊", "$totalCompletions", "Total", Modifier.weight(1f))
+        DetailStatCard("🔥", "$streak", stringResource(R.string.current_streak), Modifier.weight(1f))
+        DetailStatCard("🏆", "$bestStreak", stringResource(R.string.best_streak), Modifier.weight(1f))
+        DetailStatCard("✅", "${(completionRate * 100).toInt()}%", stringResource(R.string.rate), Modifier.weight(1f))
+        DetailStatCard("📊", "$totalCompletions", stringResource(R.string.total), Modifier.weight(1f))
     }
 }
 
@@ -235,7 +237,7 @@ private fun MonthlyHeatmapCard(data: List<Boolean>, completedColor: Color) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Last 30 days",
+                stringResource(R.string.last_30_days),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
@@ -274,7 +276,7 @@ private fun MonthlyHeatmapCard(data: List<Boolean>, completedColor: Color) {
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                 )
                 Spacer(Modifier.width(4.dp))
-                Text("Missed", style = MaterialTheme.typography.labelSmall,
+                Text(stringResource(R.string.missed), style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.width(12.dp))
                 Box(
@@ -284,7 +286,7 @@ private fun MonthlyHeatmapCard(data: List<Boolean>, completedColor: Color) {
                         .background(completedColor)
                 )
                 Spacer(Modifier.width(4.dp))
-                Text("Done", style = MaterialTheme.typography.labelSmall,
+                Text(stringResource(R.string.cd_done), style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }

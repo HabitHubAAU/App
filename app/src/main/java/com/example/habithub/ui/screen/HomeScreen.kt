@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.filled.Favorite
+import com.example.habithub.R
 import com.example.habithub.data.model.Habit
 import com.example.habithub.ui.theme.HabitHubTheme
 import com.example.habithub.ui.viewmodel.HabitViewModel
@@ -73,7 +75,7 @@ fun HomeScreen(
     )
 }
 
-private val HOME_TABS = listOf("Alle", "Study", "Hobby", "Work")
+private val HOME_TAB_RES = listOf(R.string.tab_all, R.string.tab_study, R.string.tab_hobby, R.string.tab_work)
 private val HOME_CATEGORIES = listOf(null, "study", "hobby", "work")
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -95,13 +97,14 @@ fun HomeScreenContent(
     val dateLabel = remember {
         SimpleDateFormat("EEEE, MMMM d", Locale.getDefault()).format(Date())
     }
-    val greeting = remember {
+    val greetingRes = remember {
         when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
-            in 5..11  -> "Good morning"
-            in 12..17 -> "Good afternoon"
-            else      -> "Good evening"
+            in 5..11  -> R.string.greeting_morning
+            in 12..17 -> R.string.greeting_afternoon
+            else      -> R.string.greeting_evening
         }
     }
+    val greeting = stringResource(greetingRes)
     var showSortMenu by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -130,7 +133,7 @@ fun HomeScreenContent(
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
-                            contentDescription = "Einstellungen",
+                            contentDescription = stringResource(R.string.action_settings),
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
@@ -138,7 +141,7 @@ fun HomeScreenContent(
                         IconButton(onClick = { showSortMenu = true }) {
                             Icon(
                                 Icons.Filled.Sort,
-                                contentDescription = "Sort habits",
+                                contentDescription = stringResource(R.string.action_sort),
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
@@ -148,7 +151,7 @@ fun HomeScreenContent(
                         ) {
                             SortOrder.entries.forEach { order ->
                                 DropdownMenuItem(
-                                    text = { Text(order.label) },
+                                    text = { Text(stringResource(order.labelRes)) },
                                     onClick = {
                                         onSortOrderChange(order)
                                         showSortMenu = false
@@ -170,11 +173,11 @@ fun HomeScreenContent(
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             TabRow(selectedTabIndex = selectedTab) {
-                HOME_TABS.forEachIndexed { index, title ->
+                HOME_TAB_RES.forEachIndexed { index, titleRes ->
                     Tab(
                         selected = selectedTab == index,
                         onClick = { selectedTab = index },
-                        text = { Text(title) }
+                        text = { Text(stringResource(titleRes)) }
                     )
                 }
             }
@@ -203,10 +206,10 @@ fun HomeScreenContent(
                             modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("No habits yet!", style = MaterialTheme.typography.headlineSmall)
+                            Text(stringResource(R.string.no_habits_title), style = MaterialTheme.typography.headlineSmall)
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                "Tap Add to create your first habit.",
+                                stringResource(R.string.no_habits_subtitle),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -215,7 +218,7 @@ fun HomeScreenContent(
                 } else {
                     item {
                         Text(
-                            "Tap for details  •  Long-press to edit  •  Swipe right ✓  •  Swipe left 🗑",
+                            stringResource(R.string.home_hint),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
@@ -253,9 +256,9 @@ private fun ProgressCard(completed: Int, total: Int) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Today's Progress", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.todays_progress), style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "$completed / $total",
+                    stringResource(R.string.progress_count, completed, total),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -269,7 +272,7 @@ private fun ProgressCard(completed: Int, total: Int) {
             if (completed == total && total > 0) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "All done for today! 🎉",
+                    stringResource(R.string.all_done_today),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
@@ -299,7 +302,7 @@ private fun StepCountCard(steps: Int) {
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(
-                    "Steps since launch",
+                    stringResource(R.string.steps_since_launch),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                 )
@@ -451,14 +454,14 @@ private fun HabitCardContent(
                     if (done) {
                         Icon(
                             Icons.Filled.CheckCircle,
-                            contentDescription = "Done",
+                            contentDescription = stringResource(R.string.cd_done),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(32.dp)
                         )
                     } else {
                         Icon(
                             Icons.Outlined.RadioButtonUnchecked,
-                            contentDescription = "Mark done",
+                            contentDescription = stringResource(R.string.cd_mark_done),
                             tint = MaterialTheme.colorScheme.outline,
                             modifier = Modifier.size(32.dp)
                         )
@@ -484,13 +487,13 @@ private fun PomodoroCard(onPomodoroClick: () -> Unit) {
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "Pomodoro-Timer",
+                    stringResource(R.string.pomodoro_card_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
                 Text(
-                    "Fokussiert lernen mit Pausen",
+                    stringResource(R.string.pomodoro_card_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                 )
@@ -499,7 +502,7 @@ private fun PomodoroCard(onPomodoroClick: () -> Unit) {
                 onClick = onPomodoroClick,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
             ) {
-                Text("Starten")
+                Text(stringResource(R.string.start))
             }
         }
     }
@@ -525,13 +528,13 @@ private fun PulseCard(onPulseClick: () -> Unit) {
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "Puls messen",
+                    stringResource(R.string.pulse_card_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onErrorContainer
                 )
                 Text(
-                    "Kamera-Sensor verwenden",
+                    stringResource(R.string.pulse_card_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
                 )
@@ -540,7 +543,7 @@ private fun PulseCard(onPulseClick: () -> Unit) {
                 onClick = onPulseClick,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {
-                Text("Starten")
+                Text(stringResource(R.string.start))
             }
         }
     }

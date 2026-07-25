@@ -1,8 +1,10 @@
 package com.example.habithub.ui.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.habithub.R
 import com.example.habithub.data.model.Habit
 import com.example.habithub.data.model.HabitCompletion
 import com.example.habithub.data.repository.HabitRepository
@@ -10,11 +12,11 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-enum class SortOrder(val label: String) {
-    DEFAULT("Default"),
-    NAME("By Name"),
-    STREAK("By Streak"),
-    COMPLETION_RATE("By Completion Rate")
+enum class SortOrder(@StringRes val labelRes: Int) {
+    DEFAULT(R.string.sort_default),
+    NAME(R.string.sort_name),
+    STREAK(R.string.sort_streak),
+    COMPLETION_RATE(R.string.sort_completion_rate)
 }
 
 class HabitViewModel(private val repository: HabitRepository) : ViewModel() {

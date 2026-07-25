@@ -21,8 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.habithub.R
 import com.example.habithub.data.model.Habit
 import com.example.habithub.ui.viewmodel.HabitViewModel
 
@@ -35,8 +38,6 @@ private val EDIT_PRESET_COLORS = listOf(
     0xFF6750A4L, 0xFF00897BL, 0xFFE53935L, 0xFF43A047L,
     0xFF1E88E5L, 0xFFFB8C00L, 0xFFD81B60L, 0xFF546E7AL
 )
-
-private val EDIT_DAY_LABELS = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
 
 @Composable
 fun EditHabitScreen(
@@ -74,7 +75,11 @@ fun EditHabitScreen(
     )
 }
 
-private val EDIT_CATEGORIES = listOf("hobby" to "Hobby", "study" to "Study", "work" to "Work")
+private val EDIT_CATEGORIES = listOf(
+    "hobby" to R.string.category_hobby,
+    "study" to R.string.category_study,
+    "work" to R.string.category_work
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,8 +100,8 @@ fun EditHabitScreenContent(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete habit?") },
-            text = { Text("\"${habit.name}\" and all its history will be permanently deleted.") },
+            title = { Text(stringResource(R.string.delete_habit_title)) },
+            text = { Text(stringResource(R.string.delete_habit_message_format, habit.name)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -104,10 +109,10 @@ fun EditHabitScreenContent(
                         onDeleteHabit()
                         onNavigateBack()
                     }
-                ) { Text("Delete", color = MaterialTheme.colorScheme.error) }
+                ) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -115,17 +120,17 @@ fun EditHabitScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Edit Habit") },
+                title = { Text(stringResource(R.string.edit_habit)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(
                             Icons.Filled.Delete,
-                            contentDescription = "Delete habit",
+                            contentDescription = stringResource(R.string.cd_delete_habit),
                             tint = MaterialTheme.colorScheme.error
                         )
                     }
@@ -151,7 +156,7 @@ fun EditHabitScreenContent(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Habit name *") },
+                label = { Text(stringResource(R.string.habit_name_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp)
@@ -160,7 +165,7 @@ fun EditHabitScreenContent(
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description (optional)") },
+                label = { Text(stringResource(R.string.description_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 2,
                 shape = RoundedCornerShape(12.dp)
@@ -168,7 +173,7 @@ fun EditHabitScreenContent(
 
             // Emoji picker
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Icon", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.section_icon), style = MaterialTheme.typography.labelLarge)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(EDIT_PRESET_EMOJIS) { emoji ->
                         val selected = emoji == selectedEmoji
@@ -188,7 +193,7 @@ fun EditHabitScreenContent(
 
             // Color picker
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Color", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.section_color), style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     EDIT_PRESET_COLORS.forEach { color ->
                         val selected = color == selectedColor
@@ -218,13 +223,13 @@ fun EditHabitScreenContent(
 
             // Category selector
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Kategorie", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.section_category), style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    EDIT_CATEGORIES.forEach { (value, label) ->
+                    EDIT_CATEGORIES.forEach { (value, labelRes) ->
                         FilterChip(
                             selected = selectedCategory == value,
                             onClick = { selectedCategory = value },
-                            label = { Text(label) }
+                            label = { Text(stringResource(labelRes)) }
                         )
                     }
                 }
@@ -232,9 +237,9 @@ fun EditHabitScreenContent(
 
             // Day selector
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Repeat on", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.repeat_on), style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    EDIT_DAY_LABELS.forEachIndexed { index, label ->
+                    stringArrayResource(R.array.weekday_repeat).forEachIndexed { index, label ->
                         val isSelected = (selectedDays and (1 shl index)) != 0
                         FilterChip(
                             selected = isSelected,
@@ -287,7 +292,7 @@ fun EditHabitScreenContent(
             ) {
                 Icon(Icons.Filled.Check, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Save Changes", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.save_changes), style = MaterialTheme.typography.titleMedium)
             }
 
             Spacer(Modifier.height(16.dp))

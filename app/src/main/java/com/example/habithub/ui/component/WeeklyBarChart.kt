@@ -16,10 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.habithub.R
 import java.util.Calendar
 
 @Composable
@@ -31,11 +33,11 @@ fun WeeklyBarChart(
     barHeight: Dp = 44.dp,
     labelFontSize: TextUnit = 9.sp
 ) {
-    val dayNames = arrayOf("", "So", "Mo", "Di", "Mi", "Do", "Fr", "Sa")
+    val dayNames = stringArrayResource(R.array.weekday_short)
     val labels = (6 downTo 0).map { daysAgo ->
         val cal = Calendar.getInstance()
         cal.add(Calendar.DAY_OF_YEAR, -daysAgo)
-        dayNames[cal.get(Calendar.DAY_OF_WEEK)]
+        dayNames[cal.get(Calendar.DAY_OF_WEEK) - 1]
     }
     Row(
         modifier = modifier.fillMaxWidth(),

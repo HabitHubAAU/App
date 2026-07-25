@@ -12,10 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.habithub.R
 import com.example.habithub.data.model.Habit
 import com.example.habithub.data.model.HabitCompletion
 import com.example.habithub.ui.component.WeeklyBarChart
@@ -53,7 +55,7 @@ fun StatsScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Statistics") },
+                title = { Text(stringResource(R.string.stats_title)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -67,7 +69,7 @@ fun StatsScreenContent(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Add habits to see statistics.",
+                    stringResource(R.string.stats_empty),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -94,7 +96,7 @@ fun StatsScreenContent(
                 }
                 item {
                     Text(
-                        "Habit Details",
+                        stringResource(R.string.habit_details),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 4.dp)
@@ -129,13 +131,13 @@ private fun OverallStatsCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Text("Overview", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.overview), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                StatItem(value = totalHabits.toString(), label = "Habits")
-                StatItem(value = completedToday.toString(), label = "Today")
-                StatItem(value = last90.toString(), label = "Last 90d")
-                StatItem(value = "${(avgCompletionRate * 100).toInt()}%", label = "Avg Rate")
+                StatItem(value = totalHabits.toString(), label = stringResource(R.string.stat_habits))
+                StatItem(value = completedToday.toString(), label = stringResource(R.string.stat_today))
+                StatItem(value = last90.toString(), label = stringResource(R.string.stat_last_90))
+                StatItem(value = "${(avgCompletionRate * 100).toInt()}%", label = stringResource(R.string.stat_avg_rate))
             }
         }
     }
@@ -190,7 +192,8 @@ private fun HabitStatCard(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        if (streak > 0) "🔥 $streak day streak" else "No streak yet",
+                        if (streak > 0) stringResource(R.string.streak_days_format, streak)
+                        else stringResource(R.string.no_streak_yet),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (streak > 0) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant
@@ -203,7 +206,7 @@ private fun HabitStatCard(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Text("days", style = MaterialTheme.typography.labelSmall,
+                    Text(stringResource(R.string.days), style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -214,12 +217,12 @@ private fun HabitStatCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 MiniStatChip(
-                    label = "Best streak",
-                    value = "$bestStreak days",
+                    label = stringResource(R.string.best_streak),
+                    value = "$bestStreak ${stringResource(R.string.days)}",
                     modifier = Modifier.weight(1f)
                 )
                 MiniStatChip(
-                    label = "Completion rate",
+                    label = stringResource(R.string.completion_rate),
                     value = "${(completionRate * 100).toInt()}%",
                     modifier = Modifier.weight(1f)
                 )
@@ -227,7 +230,7 @@ private fun HabitStatCard(
 
             Spacer(Modifier.height(14.dp))
             Text(
-                "Last 7 days",
+                stringResource(R.string.last_7_days),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

@@ -14,9 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.habithub.R
 import com.example.habithub.ui.viewmodel.PomodoroPhase
 import com.example.habithub.ui.viewmodel.PomodoroViewModel
 
@@ -40,10 +42,10 @@ fun PomodoroScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Pomodoro") },
+                title = { Text(stringResource(R.string.pomodoro_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -71,7 +73,7 @@ fun PomodoroScreen(
                 MaterialTheme.colorScheme.tertiary
 
             Text(
-                text = phase.label,
+                text = stringResource(phase.labelRes),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = phaseColor
@@ -79,7 +81,7 @@ fun PomodoroScreen(
 
             // Anzahl abgeschlossener Lernrunden
             Text(
-                text = "Runde ${completedRounds + 1}  ·  $completedRounds abgeschlossen",
+                text = stringResource(R.string.round_format, completedRounds + 1, completedRounds),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -112,7 +114,7 @@ fun PomodoroScreen(
                 ) {
                     Icon(Icons.Filled.PlayArrow, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text(if (isRunning) "Pause" else "Start")
+                    Text(if (isRunning) stringResource(R.string.pause) else stringResource(R.string.start))
                 }
                 OutlinedButton(
                     onClick = { viewModel.reset() },
@@ -120,7 +122,7 @@ fun PomodoroScreen(
                 ) {
                     Icon(Icons.Filled.Refresh, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Reset")
+                    Text(stringResource(R.string.reset))
                 }
             }
 
@@ -135,16 +137,16 @@ fun PomodoroScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("Zeiten einstellen", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.set_durations), style = MaterialTheme.typography.titleSmall)
                     DurationRow(
-                        label = "Lernen",
+                        label = stringResource(R.string.phase_work),
                         minutes = workMinutes,
                         enabled = !isRunning,
                         onMinus = { viewModel.decreaseWork() },
                         onPlus = { viewModel.increaseWork() }
                     )
                     DurationRow(
-                        label = "Pause",
+                        label = stringResource(R.string.phase_break),
                         minutes = breakMinutes,
                         enabled = !isRunning,
                         onMinus = { viewModel.decreaseBreak() },
@@ -172,17 +174,17 @@ private fun DurationRow(
         Text(label, style = MaterialTheme.typography.bodyLarge)
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onMinus, enabled = enabled) {
-                Icon(Icons.Filled.Remove, contentDescription = "Weniger")
+                Icon(Icons.Filled.Remove, contentDescription = stringResource(R.string.cd_decrease))
             }
             Text(
-                text = "$minutes min",
+                text = stringResource(R.string.minutes_format, minutes),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.widthIn(min = 64.dp),
                 color = MaterialTheme.colorScheme.onSurface
             )
             IconButton(onClick = onPlus, enabled = enabled) {
-                Icon(Icons.Filled.Add, contentDescription = "Mehr")
+                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.cd_increase))
             }
         }
     }

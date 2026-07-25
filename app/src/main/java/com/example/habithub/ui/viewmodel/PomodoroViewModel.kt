@@ -1,8 +1,10 @@
 package com.example.habithub.ui.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.habithub.R
 import com.example.habithub.data.preferences.PomodoroPreference
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -12,9 +14,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-enum class PomodoroPhase(val label: String) {
-    WORK("Lernen"),
-    BREAK("Pause")
+enum class PomodoroPhase(@StringRes val labelRes: Int) {
+    WORK(R.string.phase_work),
+    BREAK(R.string.phase_break)
 }
 
 class PomodoroViewModel(private val preference: PomodoroPreference) : ViewModel() {

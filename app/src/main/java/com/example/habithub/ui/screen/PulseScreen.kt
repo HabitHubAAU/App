@@ -22,10 +22,12 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.example.habithub.R
 import java.util.concurrent.Executors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -154,13 +156,13 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Puls messen") },
+                title = { Text(stringResource(R.string.pulse_title)) },
                 navigationIcon = {
                     IconButton(onClick = {
                         measuring = false
                         onNavigateBack()
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -196,14 +198,14 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    "BPM",
+                    stringResource(R.string.bpm),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 if (measuring && bpm == null) {
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Finger auf die Kamera halten...",
+                        stringResource(R.string.pulse_hold_finger),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -218,7 +220,7 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Kamera-Zugriff erlauben")
+                    Text(stringResource(R.string.pulse_grant_camera))
                 }
             } else {
                 Button(
@@ -239,7 +241,7 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
                     )
                 ) {
                     Text(
-                        if (measuring) "Stop" else "Messen starten",
+                        if (measuring) stringResource(R.string.stop) else stringResource(R.string.pulse_start),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -255,17 +257,17 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        "So funktioniert's",
+                        stringResource(R.string.pulse_how_title),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(Modifier.height(4.dp))
-                    Text("1. Tippe auf 'Messen starten'", style = MaterialTheme.typography.bodySmall)
-                    Text("2. Halte den Finger sanft auf die Rückkamera", style = MaterialTheme.typography.bodySmall)
-                    Text("3. Warte ca. 10 Sekunden für ein Ergebnis", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.pulse_step_1), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.pulse_step_2), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.pulse_step_3), style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Hinweis: Keine medizinische Messung.",
+                        stringResource(R.string.pulse_disclaimer),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -21,9 +21,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.habithub.R
 import com.example.habithub.ui.theme.HabitHubTheme
 import com.example.habithub.ui.viewmodel.HabitViewModel
 
@@ -36,8 +39,6 @@ private val PRESET_COLORS = listOf(
     0xFF6750A4L, 0xFF00897BL, 0xFFE53935L, 0xFF43A047L,
     0xFF1E88E5L, 0xFFFB8C00L, 0xFFD81B60L, 0xFF546E7AL
 )
-
-private val DAY_LABELS = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
 
 @Composable
 fun AddHabitScreen(
@@ -52,7 +53,11 @@ fun AddHabitScreen(
     )
 }
 
-private val CATEGORIES = listOf("hobby" to "Hobby", "study" to "Study", "work" to "Work")
+private val CATEGORIES = listOf(
+    "hobby" to R.string.category_hobby,
+    "study" to R.string.category_study,
+    "work" to R.string.category_work
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,10 +75,10 @@ fun AddHabitScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("New Habit") },
+                title = { Text(stringResource(R.string.new_habit)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -98,7 +103,7 @@ fun AddHabitScreenContent(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Habit name *") },
+                label = { Text(stringResource(R.string.habit_name_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp)
@@ -108,7 +113,7 @@ fun AddHabitScreenContent(
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description (optional)") },
+                label = { Text(stringResource(R.string.description_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 2,
                 shape = RoundedCornerShape(12.dp)
@@ -116,7 +121,7 @@ fun AddHabitScreenContent(
 
             // Emoji picker
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Icon", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.section_icon), style = MaterialTheme.typography.labelLarge)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(PRESET_EMOJIS) { emoji ->
                         val selected = emoji == selectedEmoji
@@ -142,7 +147,7 @@ fun AddHabitScreenContent(
 
             // Color picker
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Color", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.section_color), style = MaterialTheme.typography.labelLarge)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     items(PRESET_COLORS) { color ->
                         val selected = color == selectedColor
@@ -172,13 +177,13 @@ fun AddHabitScreenContent(
 
             // Category selector
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Kategorie", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.section_category), style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CATEGORIES.forEach { (value, label) ->
+                    CATEGORIES.forEach { (value, labelRes) ->
                         FilterChip(
                             selected = selectedCategory == value,
                             onClick = { selectedCategory = value },
-                            label = { Text(label) }
+                            label = { Text(stringResource(labelRes)) }
                         )
                     }
                 }
@@ -186,9 +191,10 @@ fun AddHabitScreenContent(
 
             // Day selector
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Repeat on", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.repeat_on), style = MaterialTheme.typography.labelLarge)
+                val dayLabels = stringArrayResource(R.array.weekday_repeat).toList()
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    itemsIndexed(DAY_LABELS) { index, label ->
+                    itemsIndexed(dayLabels) { index, label ->
                         val isSelected = (selectedDays and (1 shl index)) != 0
                         FilterChip(
                             selected = isSelected,
@@ -250,7 +256,7 @@ fun AddHabitScreenContent(
             ) {
                 Icon(Icons.Filled.Check, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Save Habit", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.save_habit), style = MaterialTheme.typography.titleMedium)
             }
 
             Spacer(Modifier.height(16.dp))

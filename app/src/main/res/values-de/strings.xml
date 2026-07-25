@@ -1,0 +1,170 @@
+<resources>
+    <string name="app_name">HabitHub</string>
+
+    <!-- Common -->
+    <string name="back">Zurück</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="delete">Löschen</string>
+    <string name="start">Starten</string>
+
+    <!-- Home -->
+    <string name="greeting_morning">Guten Morgen</string>
+    <string name="greeting_afternoon">Guten Tag</string>
+    <string name="greeting_evening">Guten Abend</string>
+    <string name="action_settings">Einstellungen</string>
+    <string name="action_sort">Gewohnheiten sortieren</string>
+    <string name="tab_all">Alle</string>
+    <string name="tab_study">Lernen</string>
+    <string name="tab_hobby">Hobby</string>
+    <string name="tab_work">Arbeit</string>
+    <string name="todays_progress">Heutiger Fortschritt</string>
+    <string name="progress_count">%1$d / %2$d</string>
+    <string name="all_done_today">Alles für heute erledigt! 🎉</string>
+    <string name="steps_since_launch">Schritte seit dem Start</string>
+    <string name="pomodoro_card_title">Pomodoro-Timer</string>
+    <string name="pomodoro_card_subtitle">Fokussiert lernen mit Pausen</string>
+    <string name="pulse_card_title">Puls messen</string>
+    <string name="pulse_card_subtitle">Kamera-Sensor verwenden</string>
+    <string name="no_habits_title">Noch keine Gewohnheiten!</string>
+    <string name="no_habits_subtitle">Tippe auf Hinzufügen, um deine erste Gewohnheit zu erstellen.</string>
+    <string name="home_hint">Tippen für Details  •  Lange drücken zum Bearbeiten  •  Nach rechts wischen ✓  •  Nach links wischen 🗑</string>
+    <string name="cd_done">Erledigt</string>
+    <string name="cd_mark_done">Als erledigt markieren</string>
+
+    <!-- Sort order -->
+    <string name="sort_default">Standard</string>
+    <string name="sort_name">Nach Name</string>
+    <string name="sort_streak">Nach Serie</string>
+    <string name="sort_completion_rate">Nach Erfüllungsrate</string>
+
+    <!-- Stats -->
+    <string name="stats_title">Statistik</string>
+    <string name="stats_empty">Füge Gewohnheiten hinzu, um Statistiken zu sehen.</string>
+    <string name="overview">Übersicht</string>
+    <string name="stat_habits">Anzahl</string>
+    <string name="stat_today">Heute</string>
+    <string name="stat_last_90">Letzte 90T</string>
+    <string name="stat_avg_rate">Ø Rate</string>
+    <string name="habit_details">Details</string>
+    <string name="streak_days_format">🔥 %1$d Tage Serie</string>
+    <string name="no_streak_yet">Noch keine Serie</string>
+    <string name="days">Tage</string>
+    <string name="best_streak">Beste Serie</string>
+    <string name="completion_rate">Erfüllungsrate</string>
+    <string name="last_7_days">Letzte 7 Tage</string>
+
+    <!-- Detail -->
+    <string name="cd_edit_habit">Gewohnheit bearbeiten</string>
+    <string name="current_streak">Aktuelle Serie</string>
+    <string name="rate">Rate</string>
+    <string name="total">Gesamt</string>
+    <string name="last_30_days">Letzte 30 Tage</string>
+    <string name="missed">Verpasst</string>
+    <string name="since_format">Seit %1$s</string>
+
+    <!-- Add / Edit -->
+    <string name="new_habit">Neue Gewohnheit</string>
+    <string name="edit_habit">Gewohnheit bearbeiten</string>
+    <string name="habit_name_label">Name der Gewohnheit *</string>
+    <string name="description_label">Beschreibung (optional)</string>
+    <string name="section_icon">Symbol</string>
+    <string name="section_color">Farbe</string>
+    <string name="section_category">Kategorie</string>
+    <string name="category_hobby">Hobby</string>
+    <string name="category_study">Lernen</string>
+    <string name="category_work">Arbeit</string>
+    <string name="repeat_on">Wiederholen an</string>
+    <string name="save_habit">Gewohnheit speichern</string>
+    <string name="save_changes">Änderungen speichern</string>
+    <string name="cd_delete_habit">Gewohnheit löschen</string>
+    <string name="delete_habit_title">Gewohnheit löschen?</string>
+    <string name="delete_habit_message_format">\"%1$s\" und der gesamte Verlauf werden dauerhaft gelöscht.</string>
+
+    <!-- Pulse -->
+    <string name="pulse_title">Puls messen</string>
+    <string name="bpm">BPM</string>
+    <string name="pulse_hold_finger">Finger auf die Kamera halten…</string>
+    <string name="pulse_grant_camera">Kamera-Zugriff erlauben</string>
+    <string name="stop">Stopp</string>
+    <string name="pulse_start">Messen starten</string>
+    <string name="pulse_how_title">So funktioniert\'s</string>
+    <string name="pulse_step_1">1. Tippe auf \'Messen starten\'</string>
+    <string name="pulse_step_2">2. Halte den Finger sanft auf die Rückkamera</string>
+    <string name="pulse_step_3">3. Warte ca. 10 Sekunden für ein Ergebnis</string>
+    <string name="pulse_disclaimer">Hinweis: Keine medizinische Messung.</string>
+
+    <!-- Pomodoro -->
+    <string name="pomodoro_title">Pomodoro</string>
+    <string name="phase_work">Lernen</string>
+    <string name="phase_break">Pause</string>
+    <string name="round_format">Runde %1$d  ·  %2$d abgeschlossen</string>
+    <string name="pause">Pause</string>
+    <string name="reset">Zurücksetzen</string>
+    <string name="set_durations">Zeiten einstellen</string>
+    <string name="minutes_format">%1$d Min</string>
+    <string name="cd_decrease">Weniger</string>
+    <string name="cd_increase">Mehr</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Einstellungen</string>
+    <string name="section_appearance">Darstellung</string>
+    <string name="dark_mode">Dunkles Design</string>
+    <string name="dark_mode_on">Dunkles Design aktiv</string>
+    <string name="dark_mode_off">Helles Design aktiv</string>
+    <string name="section_notifications">Benachrichtigungen</string>
+    <string name="notifications">Benachrichtigungen</string>
+    <string name="notifications_subtitle">Hinweise beim Abhaken und im Pomodoro-Timer</string>
+    <string name="section_about">Über die App</string>
+    <string name="version_format">Version %1$s</string>
+    <string name="about_tagline">Baue gute Gewohnheiten auf – jeden Tag ein kleiner Schritt.</string>
+
+    <!-- Notifications -->
+    <string name="channel_name">Gewohnheits-Erinnerungen</string>
+    <string name="channel_description">Benachrichtigungen für Erinnerungen und Updates</string>
+    <string name="notif_permission_steps">Berechtigung nötig, um Schritte anzuzeigen</string>
+    <string name="notif_disabled">Benachrichtigungen deaktiviert</string>
+    <string name="notif_habit_done_title">Gewohnheit erledigt!</string>
+    <string name="notif_habit_done_msg">Gut gemacht! Weiter so.</string>
+    <string name="notif_focus_done_title">Fokus-Runde abgeschlossen!</string>
+    <string name="notif_focus_done_msg">Zeit für eine verdiente Pause.</string>
+    <string name="notif_break_over_title">Pause vorbei!</string>
+    <string name="notif_break_over_msg">Bereit, wieder loszulegen? Los geht\'s.</string>
+    <string name="notif_habit_created_title">Neue Gewohnheit erstellt!</string>
+    <string name="notif_habit_created_msg_format">%1$s %2$s wurde erfolgreich hinzugefügt.</string>
+
+    <!-- Weekday abbreviations for the repeat picker (index 0 = Monday) -->
+    <string-array name="weekday_repeat">
+        <item>Mo</item>
+        <item>Di</item>
+        <item>Mi</item>
+        <item>Do</item>
+        <item>Fr</item>
+        <item>Sa</item>
+        <item>So</item>
+    </string-array>
+
+    <!-- Weekday abbreviations (index 0 = Sunday, matching Calendar.DAY_OF_WEEK - 1) -->
+    <string-array name="weekday_short">
+        <item>So</item>
+        <item>Mo</item>
+        <item>Di</item>
+        <item>Mi</item>
+        <item>Do</item>
+        <item>Fr</item>
+        <item>Sa</item>
+    </string-array>
+
+    <!-- Motivational quotes (shown on shake) -->
+    <string-array name="motivational_quotes">
+        <item>Du bist nur eine Gewohnheit von einem anderen Leben entfernt.</item>
+        <item>Kleine Schritte jeden Tag führen zu großen Veränderungen.</item>
+        <item>Beständigkeit ist der Schlüssel zum Erfolg.</item>
+        <item>Fortschritt, nicht Perfektion. Bleib dran!</item>
+        <item>Baue Gewohnheiten auf, baue dich selbst auf.</item>
+        <item>Jeder Tag ist eine neue Chance zu wachsen.</item>
+        <item>Champions machen gewöhnliche Dinge außergewöhnlich gut.</item>
+        <item>Deine Gewohnheiten formen dein Schicksal.</item>
+        <item>Ein Tag nach dem anderen, eine Gewohnheit nach der anderen.</item>
+        <item>Das Geheimnis des Vorankommens ist der Anfang.</item>
+    </string-array>
+</resources>

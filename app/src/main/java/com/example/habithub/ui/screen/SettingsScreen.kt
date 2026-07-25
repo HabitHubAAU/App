@@ -12,9 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.habithub.R
 import com.example.habithub.ui.theme.HabitHubTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,10 +38,10 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Einstellungen") },
+                title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -58,44 +60,45 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // Darstellung
-            SettingsSection(title = "Darstellung") {
+            SettingsSection(title = stringResource(R.string.section_appearance)) {
                 SettingsToggleRow(
                     icon = Icons.Filled.DarkMode,
-                    title = "Dunkles Design",
-                    subtitle = if (isDarkTheme) "Dunkles Design aktiv" else "Helles Design aktiv",
+                    title = stringResource(R.string.dark_mode),
+                    subtitle = if (isDarkTheme) stringResource(R.string.dark_mode_on)
+                               else stringResource(R.string.dark_mode_off),
                     checked = isDarkTheme,
                     onCheckedChange = { onToggleTheme() }
                 )
             }
 
             // Benachrichtigungen
-            SettingsSection(title = "Benachrichtigungen") {
+            SettingsSection(title = stringResource(R.string.section_notifications)) {
                 SettingsToggleRow(
                     icon = Icons.Filled.Notifications,
-                    title = "Benachrichtigungen",
-                    subtitle = "Hinweise beim Abhaken und im Pomodoro-Timer",
+                    title = stringResource(R.string.notifications),
+                    subtitle = stringResource(R.string.notifications_subtitle),
                     checked = notificationsEnabled,
                     onCheckedChange = onToggleNotifications
                 )
             }
 
             // Über die App
-            SettingsSection(title = "Über die App") {
+            SettingsSection(title = stringResource(R.string.section_about)) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        "HabitHub",
+                        stringResource(R.string.app_name),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Version $versionName",
+                        stringResource(R.string.version_format, versionName),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Baue gute Gewohnheiten auf – jeden Tag ein kleiner Schritt.",
+                        stringResource(R.string.about_tagline),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

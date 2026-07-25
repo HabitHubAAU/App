@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
@@ -98,7 +99,7 @@ class MainActivity : ComponentActivity() {
             stepCount = null
             lifecycleScope.launch {
                 snackbarHostState.showSnackbar(
-                    message = "Permission needed to show step count",
+                    message = getString(R.string.notif_permission_steps),
                     duration = SnackbarDuration.Short
                 )
             }
@@ -112,25 +113,12 @@ class MainActivity : ComponentActivity() {
         if (!granted) {
             lifecycleScope.launch {
                 snackbarHostState.showSnackbar(
-                    message = "Notifications disabled",
+                    message = getString(R.string.notif_disabled),
                     duration = SnackbarDuration.Short
                 )
             }
         }
     }
-
-    private val motivationalQuotes = listOf(
-        "You are one habit away from a different life.",
-        "Small steps every day lead to big changes.",
-        "Consistency is the key to achievement.",
-        "Progress, not perfection. Keep going!",
-        "Build habits, build yourself.",
-        "Every day is a new opportunity to grow.",
-        "Champions do ordinary things extraordinarily well.",
-        "Your habits shape your destiny.",
-        "One day at a time, one habit at a time.",
-        "The secret of getting ahead is getting started."
-    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -140,7 +128,7 @@ class MainActivity : ComponentActivity() {
         notificationManager = HabitNotificationManager(this)
 
         shakeDetector = ShakeDetector {
-            val quote = motivationalQuotes.random()
+            val quote = resources.getStringArray(R.array.motivational_quotes).random()
             lifecycleScope.launch {
                 snackbarHostState.currentSnackbarData?.dismiss()
                 snackbarHostState.showSnackbar(message = quote, duration = SnackbarDuration.Short)
@@ -260,6 +248,7 @@ fun HabitHubAppContent(
     val recentCompletions by viewModel.recentCompletions.collectAsState()
     val currentPomodoroPhase by pomodoroViewModel.phase.collectAsState()
     val notificationsEnabled by settingsViewModel.notificationsEnabled.collectAsState()
+    val context = LocalContext.current
 
     var initialLoad by remember { mutableStateOf(true) }
     var previousCompletionsSize by remember { mutableIntStateOf(0) }
@@ -272,8 +261,8 @@ fun HabitHubAppContent(
         } else if (todayCompletions.size > previousCompletionsSize) {
             if (notificationsEnabled) {
                 notificationManager.showNotification(
-                    title = "Habit Completed!",
-                    message = "Great job! Keep up the good work."
+                    title = context.getString(R.string.notif_habit_done_title),
+                    message = context.getString(R.string.notif_habit_done_msg)
                 )
             }
             showConfetti = true
@@ -287,13 +276,13 @@ fun HabitHubAppContent(
         } else if (notificationsEnabled) {
             if (currentPomodoroPhase == PomodoroPhase.BREAK) {
                 notificationManager.showNotification(
-                    title = "Focus session complete!",
-                    message = "Time for a well-deserved break."
+                    title = context.getString(R.string.notif_focus_done_title),
+                    message = context.getString(R.string.notif_focus_done_msg)
                 )
             } else {
                 notificationManager.showNotification(
-                    title = "Break is over!",
-                    message = "Ready to focus again? Let's go."
+                    title = context.getString(R.string.notif_break_over_title),
+                    message = context.getString(R.string.notif_break_over_msg)
                 )
             }
         }
@@ -355,8 +344,8 @@ fun HabitHubAppContent(
 
                             if (notificationsEnabled) {
                                 notificationManager.showNotification(
-                                    title = "New Habit Created!",
-                                    message = "$emoji $name was successfully added."
+                                    title = context.getString(R.string.notif_habit_created_title),
+                                    message = context.getString(R.string.notif_habit_created_msg_format, emoji, name)
                                 )
                             }
                         },
