@@ -27,6 +27,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.habithub.data.model.Habit
+import com.example.habithub.data.preferences.NotificationPreference
 import com.example.habithub.data.preferences.PomodoroPreference
 import com.example.habithub.data.preferences.ThemeMode
 import com.example.habithub.data.preferences.ThemePreference
@@ -51,7 +52,10 @@ import com.example.habithub.ui.viewmodel.ThemeViewModelFactory
 import com.example.habithub.ui.viewmodel.PomodoroViewModel
 import com.example.habithub.ui.viewmodel.PomodoroViewModelFactory
 import com.example.habithub.ui.viewmodel.PomodoroPhase
+import com.example.habithub.ui.viewmodel.SettingsViewModel
+import com.example.habithub.ui.viewmodel.SettingsViewModelFactory
 import com.example.habithub.ui.screen.PomodoroScreen
+import com.example.habithub.ui.screen.SettingsScreen
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -67,6 +71,10 @@ class MainActivity : ComponentActivity() {
 
     private val pomodoroViewModel: PomodoroViewModel by viewModels {
         PomodoroViewModelFactory(PomodoroPreference(applicationContext))
+    }
+
+    private val settingsViewModel: SettingsViewModel by viewModels {
+        SettingsViewModelFactory(NotificationPreference(applicationContext))
     }
 
     private lateinit var sensorManager: SensorManager
@@ -154,7 +162,8 @@ class MainActivity : ComponentActivity() {
                     isDarkTheme = isDarkTheme,
                     onToggleTheme = { themeViewModel.toggleTheme() },
                     pomodoroViewModel = pomodoroViewModel,
-                    notificationManager = notificationManager
+                    notificationManager = notificationManager,
+                    settingsViewModel = settingsViewModel
                 )
             }
         }
@@ -216,7 +225,8 @@ fun HabitHubApp(
     isDarkTheme: Boolean,
     onToggleTheme: () -> Unit,
     pomodoroViewModel: PomodoroViewModel,
-    notificationManager: HabitNotificationManager
+    notificationManager: HabitNotificationManager,
+    settingsViewModel: SettingsViewModel
 ) {
     val navController = rememberNavController()
 
@@ -228,7 +238,8 @@ fun HabitHubApp(
         isDarkTheme = isDarkTheme,
         onToggleTheme = onToggleTheme,
         pomodoroViewModel = pomodoroViewModel,
-        notificationManager = notificationManager
+        notificationManager = notificationManager,
+        settingsViewModel = settingsViewModel
     )
 }
 
@@ -241,12 +252,14 @@ fun HabitHubAppContent(
     isDarkTheme: Boolean,
     onToggleTheme: () -> Unit,
     pomodoroViewModel: PomodoroViewModel,
-    notificationManager: HabitNotificationManager
+    notificationManager: HabitNotificationManager,
+    settingsViewModel: SettingsViewModel
 ) {
     val habits by viewModel.habits.collectAsState()
     val todayCompletions by viewModel.todayCompletions.collectAsState()
     val recentCompletions by viewModel.recentCompletions.collectAsState()
     val currentPomodoroPhase by pomodoroViewModel.phase.collectAsState()
+    val notificationsEnabled by settingsViewModel.notificationsEnabled.collectAsState()
 
     var initialLoad by remember { mutableStateOf(true) }
     var previousCompletionsSize by remember { mutableIntStateOf(0) }
@@ -257,10 +270,12 @@ fun HabitHubAppContent(
         if (initialLoad) {
             initialLoad = false
         } else if (todayCompletions.size > previousCompletionsSize) {
-            notificationManager.showNotification(
-                title = "Habit Completed!",
-                message = "Great job! Keep up the good work."
-            )
+            if (notificationsEnabled) {
+                notificationManager.showNotification(
+                    title = "Habit Completed!",
+                    message = "Great job! Keep up the good work."
+                )
+            }
             showConfetti = true
         }
         previousCompletionsSize = todayCompletions.size
@@ -269,7 +284,7 @@ fun HabitHubAppContent(
     LaunchedEffect(currentPomodoroPhase) {
         if (initialPhaseLoad) {
             initialPhaseLoad = false
-        } else {
+        } else if (notificationsEnabled) {
             if (currentPomodoroPhase == PomodoroPhase.BREAK) {
                 notificationManager.showNotification(
                     title = "Focus session complete!",
@@ -328,8 +343,7 @@ fun HabitHubAppContent(
                             navController.navigate(Screen.Edit.route(habit.id))
                         },
                         stepCount = stepCount,
-                        isDarkTheme = isDarkTheme,
-                        onToggleTheme = onToggleTheme,
+                        onSettingsClick = { navController.navigate(Screen.Settings.route) },
                         onPulseClick = { navController.navigate(Screen.Pulse.route) },
                         onPomodoroClick = { navController.navigate(Screen.Pomodoro.route) }
                     )
@@ -339,10 +353,12 @@ fun HabitHubAppContent(
                         onAddHabit = { name, desc, emoji, color, days, category ->
                             viewModel.addHabit(name, desc, emoji, color, days, category)
 
-                            notificationManager.showNotification(
-                                title = "New Habit Created!",
-                                message = "$emoji $name was successfully added."
-                            )
+                            if (notificationsEnabled) {
+                                notificationManager.showNotification(
+                                    title = "New Habit Created!",
+                                    message = "$emoji $name was successfully added."
+                                )
+                            }
                         },
                         onNavigateBack = {
                             navController.navigate(Screen.Home.route) {
@@ -374,6 +390,15 @@ fun HabitHubAppContent(
                 composable(Screen.Pomodoro.route) {
                     PomodoroScreen(
                         viewModel = pomodoroViewModel,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+                composable(Screen.Settings.route) {
+                    SettingsScreen(
+                        isDarkTheme = isDarkTheme,
+                        onToggleTheme = onToggleTheme,
+                        notificationsEnabled = notificationsEnabled,
+                        onToggleNotifications = { settingsViewModel.setNotificationsEnabled(it) },
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }

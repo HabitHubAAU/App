@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
@@ -20,4 +21,5 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     }
     object Pulse  : Screen("pulse",            "Puls",   Icons.Filled.Info)
     object Pomodoro : Screen("pomodoro",       "Pomodoro", Icons.Filled.Info)
+    object Settings : Screen("settings",       "Settings", Icons.Filled.Settings)
 }

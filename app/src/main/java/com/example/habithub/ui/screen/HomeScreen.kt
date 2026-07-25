@@ -16,10 +16,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsWalk
-import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.*
@@ -50,8 +49,7 @@ fun HomeScreen(
     onHabitClick: (Habit) -> Unit,
     onHabitLongClick: (Habit) -> Unit,
     stepCount: Int?,
-    isDarkTheme: Boolean = false,
-    onToggleTheme: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
     onPulseClick: () -> Unit = {},
     onPomodoroClick: () -> Unit = {}
 ) {
@@ -69,8 +67,7 @@ fun HomeScreen(
         sortOrder = sortOrder,
         onSortOrderChange = { viewModel.setSortOrder(it) },
         stepCount = stepCount,
-        isDarkTheme = isDarkTheme,
-        onToggleTheme = onToggleTheme,
+        onSettingsClick = onSettingsClick,
         onPulseClick = onPulseClick,
         onPomodoroClick = onPomodoroClick
     )
@@ -91,8 +88,7 @@ fun HomeScreenContent(
     sortOrder: SortOrder = SortOrder.DEFAULT,
     onSortOrderChange: (SortOrder) -> Unit = {},
     stepCount: Int? = null,
-    isDarkTheme: Boolean = false,
-    onToggleTheme: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
     onPulseClick: () -> Unit = {},
     onPomodoroClick: () -> Unit = {}
 ) {
@@ -131,10 +127,10 @@ fun HomeScreenContent(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onToggleTheme) {
+                    IconButton(onClick = onSettingsClick) {
                         Icon(
-                            imageVector = if (isDarkTheme) Icons.Filled.LightMode else Icons.Filled.DarkMode,
-                            contentDescription = "Toggle theme",
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = "Einstellungen",
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
