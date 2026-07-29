@@ -30,12 +30,27 @@ import androidx.core.content.ContextCompat
 import com.example.habithub.R
 import java.util.concurrent.Executors
 
+/**
+ * Eine zustandsbehaftete UI-Komponente zur optischen Erfassung der Herzfrequenz (Pulsmessung).
+ *
+ * Diese Ansicht nutzt die Smartphone-Kamera und die aktivierte LED-Taschenlampe (via CameraX),
+ * um durch Photoplethysmographie (PPG) minimale Farb- bzw. Helligkeitsveränderungen der Haut
+ * an der aufgelegten Fingerkuppe zu erkennen. Diese Veränderungen korrelieren mit dem
+ * pulssynchronen Blutfluss.
+ *
+ * Der integrierte Algorithmus analysiert kontinuierlich den zentralen Bildausschnitt,
+ * wendet einen Tiefpassfilter (exponentielle Glättung) an und berechnet die Schläge pro
+ * Minute (BPM) basierend auf den zeitlichen Abständen der erkannten Helligkeits-Gipfel (Peaks).
+ *
+ * @param onNavigateBack Ein Callback zur Navigation zurück zum vorherigen Bildschirm.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PulseScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    // Verwaltung der Kamera-Berechtigung
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
@@ -45,10 +60,12 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
         ActivityResultContracts.RequestPermission()
     ) { granted -> hasCameraPermission = granted }
 
+    // UI- und Messzustände
     var measuring by remember { mutableStateOf(false) }
     var bpm by remember { mutableStateOf<Int?>(null) }
     var peakCount by remember { mutableIntStateOf(0) }
 
+    // Animatable für den Herzschlag-Effekt (skaliert das Icon bei jedem erkannten Puls)
     val heartScale = remember { Animatable(1f) }
     LaunchedEffect(peakCount) {
         if (peakCount > 0) {
@@ -57,13 +74,18 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
         }
     }
 
-    // Mutable analysis state shared between main thread and analyzer thread
+    // Primitive Arrays dienen hier als zustandsbehaftete (mutable) Container,
+    // um die Werte thread-sicher zwischen dem Compose-Thread und dem CameraX-Analyzer-Thread zu teilen.
     val smoothed = remember { doubleArrayOf(0.0) }
     val prevSmoothed = remember { doubleArrayOf(0.0) }
     val prevRising = remember { booleanArrayOf(false) }
     val lastPeakTime = remember { longArrayOf(0L) }
     val peakIntervals = remember { mutableListOf<Long>() }
 
+    /**
+     * Setzt die internen Analysevariablen zurück.
+     * Wird aufgerufen, wenn die Messung gestoppt oder die Komponente verworfen wird.
+     */
     fun resetAnalysisState() {
         smoothed[0] = 0.0
         prevSmoothed[0] = 0.0
@@ -72,6 +94,7 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
         peakIntervals.clear()
     }
 
+    // Verwaltet den Lebenszyklus der CameraX-Instanz gekoppelt an den Messvorgang
     DisposableEffect(measuring, hasCameraPermission) {
         if (!measuring || !hasCameraPermission) return@DisposableEffect onDispose {}
 
@@ -83,11 +106,13 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
             val provider = cameraProviderFuture.get()
             boundProvider = provider
 
+            // Konfiguration der Bildanalyse, verwirft alte Frames zugunsten der Latenz
             val analysis = ImageAnalysis.Builder()
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
 
             analysis.setAnalyzer(executor) { imageProxy ->
+                // Extraktion der Luminanz-Ebene (Y-Plane aus YUV_420_888)
                 val plane = imageProxy.planes[0]
                 val buffer = plane.buffer
                 val bytes = ByteArray(buffer.remaining())
@@ -96,33 +121,43 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
                 val w = imageProxy.width
                 val h = imageProxy.height
                 val stride = plane.rowStride
+
+                // Begrenzung der Analyse auf das innere Viertel (Zentrum) des Bildes
                 val x0 = w / 4; val x1 = 3 * w / 4
                 val y0 = h / 4; val y1 = 3 * h / 4
                 var sum = 0L; var count = 0
                 var row = y0
+
+                // Iteration über die definierten Pixel zur Berechnung der Durchschnittshelligkeit
                 while (row < y1) {
                     var col = x0
                     while (col < x1) {
                         val idx = row * stride + col
                         if (idx < bytes.size) { sum += bytes[idx].toInt() and 0xFF; count++ }
-                        col += 4
+                        col += 4 // Überspringt Pixel zur Leistungsoptimierung
                     }
                     row += 4
                 }
                 val avg = if (count > 0) sum.toDouble() / count else 0.0
 
+                // Exponentielle Glättung (Tiefpassfilter) zur Reduktion von Bildrauschen
                 smoothed[0] = 0.7 * smoothed[0] + 0.3 * avg
                 val isRising = smoothed[0] > prevSmoothed[0]
                 val now = System.currentTimeMillis()
 
+                // Peak-Erkennung: Ein Peak ist erreicht, wenn der Wert nach einem Anstieg wieder fällt
                 if (isRising && !prevRising[0]) {
                     prevRising[0] = true
                 } else if (!isRising && prevRising[0]) {
                     prevRising[0] = false
                     val elapsed = now - lastPeakTime[0]
+
+                    // Filterung von unrealistischen Intervallen (BPM < 40 oder > 200)
                     if (lastPeakTime[0] > 0 && elapsed in 300..1500) {
                         peakIntervals.add(elapsed)
                         if (peakIntervals.size > 8) peakIntervals.removeAt(0)
+
+                        // Erst nach 3 validen Intervallen wird ein Durchschnitt errechnet
                         if (peakIntervals.size >= 3) {
                             val avgInterval = peakIntervals.average()
                             val newBpm = (60000 / avgInterval).toInt()
@@ -143,6 +178,7 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
             val camera = provider.bindToLifecycle(
                 lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, analysis
             )
+            // Aktiviert die Taschenlampe zur Durchleuchtung der Fingerkuppe
             camera.cameraControl.enableTorch(true)
         }, ContextCompat.getMainExecutor(context))
 
@@ -181,6 +217,7 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceEvenly
         ) {
+            // Anzeige-Bereich für den ermittelten Puls und die visuelle Herzschlag-Animation
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(
                     Icons.Filled.Favorite,
@@ -202,6 +239,7 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                // Ladeindikator während der Initialisierungsphase der Messung
                 if (measuring && bpm == null) {
                     Spacer(Modifier.height(8.dp))
                     Text(
@@ -214,6 +252,7 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
                 }
             }
 
+            // Steuerungs-Bereich: Berechtigung anfragen oder Messung starten/stoppen
             if (!hasCameraPermission) {
                 Button(
                     onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
@@ -237,7 +276,7 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (measuring) MaterialTheme.colorScheme.error
-                                        else MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.primary
                     )
                 ) {
                     Text(
@@ -247,6 +286,7 @@ fun PulseScreen(onNavigateBack: () -> Unit) {
                 }
             }
 
+            // Anleitungskarte mit Schritt-für-Schritt-Anweisungen für den Nutzer
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),

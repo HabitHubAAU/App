@@ -29,16 +29,35 @@ import com.example.habithub.R
 import com.example.habithub.data.model.Habit
 import com.example.habithub.ui.viewmodel.HabitViewModel
 
+/**
+ * Eine vordefinierte Liste von Emojis zur visuellen Anpassung der Gewohnheit im Bearbeitungsmodus.
+ */
 private val EDIT_PRESET_EMOJIS = listOf(
     "⭐", "💪", "🏃", "📚", "💧", "🧘", "🎯", "🌙", "☀️",
     "🍎", "✍️", "🎵", "💊", "🧹", "💻", "🌿", "🔥", "❤️", "🎨", "🏋️"
 )
 
+/**
+ * Eine vordefinierte Liste von ARGB-Farbwerten (als Long) zur farblichen Anpassung der Gewohnheit.
+ */
 private val EDIT_PRESET_COLORS = listOf(
     0xFF6750A4L, 0xFF00897BL, 0xFFE53935L, 0xFF43A047L,
     0xFF1E88E5L, 0xFFFB8C00L, 0xFFD81B60L, 0xFF546E7AL
 )
 
+/**
+ * Ein zustandsbehafteter (stateful) Wrapper-Bildschirm für die Bearbeitung einer bestehenden Gewohnheit.
+ * Diese Komponente liest die aktuelle Gewohnheit anhand der übergebenen [habitId] aus dem [HabitViewModel] aus.
+ * Sie delegiert die Aktualisierung oder Löschung der Daten an die entsprechenden ViewModel-Funktionen.
+ *
+ * Falls die gesuchte Gewohnheit nicht (mehr) in der Liste gefunden wird,
+ * wird sicherheitshalber eine automatische Navigation zurück ausgelöst.
+ *
+ * @param habitId Die eindeutige Datenbank-ID der zu bearbeitenden Gewohnheit.
+ * @param viewModel Das ViewModel zur Verwaltung und Aktualisierung der Gewohnheitsdaten in der Datenbank.
+ * @param onNavigateBack Ein Callback zur Rückkehr zum vorherigen Bildschirm (z. B. nach Speichern oder Abbrechen).
+ * @param onDeleteHabit Ein Callback, der aufgerufen wird, wenn die Gewohnheit erfolgreich gelöscht werden soll.
+ */
 @Composable
 fun EditHabitScreen(
     habitId: Int,
@@ -75,12 +94,26 @@ fun EditHabitScreen(
     )
 }
 
+/**
+ * Eine vordefinierte Liste von verfügbaren Kategorien für den Bearbeitungsmodus,
+ * bestehend aus einem internen Schlüssel und der zugehörigen String-Ressourcen-ID.
+ */
 private val EDIT_CATEGORIES = listOf(
     "hobby" to R.string.category_hobby,
     "study" to R.string.category_study,
     "work" to R.string.category_work
 )
 
+/**
+ * Die UI-Kernkomponente für das Formular zur Bearbeitung einer Gewohnheit.
+ * Initialisiert die lokalen Zustände der Eingabefelder mit den Werten der übergebenen [habit].
+ * Bietet zusätzlich einen Bestätigungsdialog für das Löschen der Gewohnheit, um versehentlichen Datenverlust zu vermeiden.
+ *
+ * @param habit Das Datenmodell der Gewohnheit mit den initialen Werten für das Formular.
+ * @param onSaveHabit Ein Callback, der beim Klick auf "Speichern" die aktualisierten Formulardaten übergibt.
+ * @param onDeleteHabit Ein Callback zur Bestätigung der Löschung der Gewohnheit.
+ * @param onNavigateBack Ein Callback zur Navigation, ausgelöst durch den Zurück-Pfeil oder nach Abschluss einer Aktion.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditHabitScreenContent(
@@ -89,14 +122,18 @@ fun EditHabitScreenContent(
     onDeleteHabit: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    // Lokale Zustände, initialisiert mit den bestehenden Daten der Gewohnheit
     var name by remember { mutableStateOf(habit.name) }
     var description by remember { mutableStateOf(habit.description) }
     var selectedEmoji by remember { mutableStateOf(habit.emoji) }
     var selectedColor by remember { mutableLongStateOf(habit.colorValue) }
     var selectedDays by remember { mutableIntStateOf(habit.targetDays) }
     var selectedCategory by remember { mutableStateOf(habit.category) }
+
+    // Steuerungs-Flag für die Anzeige des Lösch-Bestätigungsdialogs
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    // Alert-Dialog zur Absicherung des Löschvorgangs
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -127,6 +164,7 @@ fun EditHabitScreenContent(
                     }
                 },
                 actions = {
+                    // Lösch-Icon in der TopAppBar
                     IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(
                             Icons.Filled.Delete,
@@ -153,6 +191,7 @@ fun EditHabitScreenContent(
         ) {
             Spacer(Modifier.height(4.dp))
 
+            // Eingabefeld für den Namen
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -162,6 +201,7 @@ fun EditHabitScreenContent(
                 shape = RoundedCornerShape(12.dp)
             )
 
+            // Eingabefeld für die Beschreibung
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
@@ -171,7 +211,7 @@ fun EditHabitScreenContent(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Emoji picker
+            // Emoji-Auswahl (horizontal scrollbar)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.section_icon), style = MaterialTheme.typography.labelLarge)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -181,7 +221,7 @@ fun EditHabitScreenContent(
                             onClick = { selectedEmoji = emoji },
                             shape = CircleShape,
                             color = if (selected) MaterialTheme.colorScheme.primaryContainer
-                                    else MaterialTheme.colorScheme.surfaceVariant,
+                            else MaterialTheme.colorScheme.surfaceVariant,
                             modifier = Modifier.size(52.dp),
                             border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
                         ) {
@@ -191,7 +231,7 @@ fun EditHabitScreenContent(
                 }
             }
 
-            // Color picker
+            // Farb-Auswahl (horizontal scrollbar)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.section_color), style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -221,7 +261,7 @@ fun EditHabitScreenContent(
                 }
             }
 
-            // Category selector
+            // Kategorie-Auswahl via FilterChips
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.section_category), style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -235,7 +275,7 @@ fun EditHabitScreenContent(
                 }
             }
 
-            // Day selector
+            // Wochentags-Auswahl via FilterChips (Bitmaske)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.repeat_on), style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -255,7 +295,7 @@ fun EditHabitScreenContent(
                 }
             }
 
-            // Live preview
+            // Dynamische Vorschaukarte für die vorgenommenen Änderungen
             if (name.isNotBlank()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -279,6 +319,7 @@ fun EditHabitScreenContent(
                 }
             }
 
+            // Schaltfläche zum Speichern der Änderungen
             Button(
                 onClick = {
                     if (name.isNotBlank()) {

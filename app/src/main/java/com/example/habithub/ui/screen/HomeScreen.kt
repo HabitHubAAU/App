@@ -45,6 +45,19 @@ import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.runtime.mutableIntStateOf
 
+/**
+ * Ein zustandsbehafteter (stateful) Wrapper-Bildschirm für die Hauptansicht der Applikation.
+ * Diese Komponente extrahiert die primären Datenstrom-Zustände (StateFlows) aus dem [HabitViewModel],
+ * darunter die sortierte Liste der Gewohnheiten, die heutigen Abschlüsse und die aktive Sortierreihenfolge.
+ *
+ * @param viewModel Das ViewModel zur Bereitstellung der Daten-Streams und zur Ausführung von Geschäftslogik.
+ * @param onHabitClick Callback für einen regulären Klick auf eine Gewohnheit (navigiert z. B. zur Detailansicht).
+ * @param onHabitLongClick Callback für einen langen Klick auf eine Gewohnheit (navigiert z. B. in den Bearbeitungsmodus).
+ * @param stepCount Der aktuelle Schrittzählerstand aus dem Hardware-Sensor.
+ * @param onSettingsClick Callback zur Navigation in den Einstellungsbildschirm.
+ * @param onPulseClick Callback zur Navigation in den Pulsmessungsbildschirm.
+ * @param onPomodoroClick Callback zur Navigation in den Pomodoro-Timer-Bildschirm.
+ */
 @Composable
 fun HomeScreen(
     viewModel: HabitViewModel,
@@ -75,9 +88,36 @@ fun HomeScreen(
     )
 }
 
+/** Definition der Titel-Ressourcen für die Tab-Navigation. */
 private val HOME_TAB_RES = listOf(R.string.tab_all, R.string.tab_study, R.string.tab_hobby, R.string.tab_work)
+
+/**
+ * Definition der internen Kategoriewerte für die Tab-Navigation.
+ * Der Index 0 (null) repräsentiert die ungefilterte Gesamtansicht ("Alle").
+ */
 private val HOME_CATEGORIES = listOf(null, "study", "hobby", "work")
 
+/**
+ * Die zustandslose (stateless) UI-Kernkomponente für den Hauptbildschirm.
+ * Baut das Layout bestehend aus TopAppBar, dynamischer Tab-Leiste zur Kategoriefilterung
+ * und einer LazyColumn für die scrollbare Liste der Gewohnheiten auf.
+ *
+ * Beinhaltet zudem die kontextbezogene Anzeige von speziellen Funktionskarten (Pomodoro, Puls)
+ * basierend auf dem aktuell ausgewählten Tab.
+ *
+ * @param habits Die vollständige Liste aller verfügbaren Gewohnheiten.
+ * @param completedIds Ein Set von IDs der Gewohnheiten, die für den heutigen Tag bereits abgeschlossen wurden.
+ * @param onToggleCompletion Callback zum Umschalten des Abschlussstatus einer Gewohnheit.
+ * @param onDeleteHabit Callback zum Löschen einer Gewohnheit.
+ * @param onHabitClick Callback für einfache Klicks auf eine Gewohnheitskarte.
+ * @param onHabitLongClick Callback für langes Gedrückthalten einer Gewohnheitskarte.
+ * @param sortOrder Die aktuell ausgewählte Sortierregel für die Darstellung der Liste.
+ * @param onSortOrderChange Callback zur Änderung der globalen Sortierreihenfolge.
+ * @param stepCount Die Anzahl der heute gegangenen Schritte.
+ * @param onSettingsClick Callback zur Navigation in die Einstellungen.
+ * @param onPulseClick Callback zum Starten der Pulsmessung.
+ * @param onPomodoroClick Callback zum Starten des Pomodoro-Timers.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenContent(
@@ -94,9 +134,12 @@ fun HomeScreenContent(
     onPulseClick: () -> Unit = {},
     onPomodoroClick: () -> Unit = {}
 ) {
+    // Generiert eine tagesaktuelle Datumsanzeige
     val dateLabel = remember {
         SimpleDateFormat("EEEE, MMMM d", Locale.getDefault()).format(Date())
     }
+
+    // Ermittelt eine tageszeitabhängige Begrüßung (Morgen, Nachmittag, Abend)
     val greetingRes = remember {
         when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
             in 5..11  -> R.string.greeting_morning
@@ -105,13 +148,18 @@ fun HomeScreenContent(
         }
     }
     val greeting = stringResource(greetingRes)
+
+    // Lokale Zustände für UI-Steuerung
     var showSortMenu by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableIntStateOf(0) }
 
+    // Filtert die Liste der Gewohnheiten basierend auf dem aktiven Tab
     val filteredHabits = remember(habits, selectedTab) {
         val cat = HOME_CATEGORIES[selectedTab]
         if (cat == null) habits else habits.filter { it.category == cat }
     }
+
+    // Berechnet die Schnittmenge der abgeschlossenen IDs für die aktuell gefilterte Liste (für den Fortschrittsbalken)
     val filteredCompletedIds = remember(completedIds, filteredHabits) {
         completedIds.intersect(filteredHabits.map { it.id }.toSet())
     }
@@ -172,6 +220,7 @@ fun HomeScreenContent(
         }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            // Horizontale Tab-Leiste zur Kategoriefilterung
             TabRow(selectedTabIndex = selectedTab) {
                 HOME_TAB_RES.forEachIndexed { index, titleRes ->
                     Tab(
@@ -181,25 +230,34 @@ fun HomeScreenContent(
                     )
                 }
             }
+
+            // Hauptliste zur Darstellung der Gewohnheiten und Statuskarten
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                // Fortschrittskarte (wird nur eingeblendet, wenn Gewohnheiten im aktuellen Filter existieren)
                 if (filteredHabits.isNotEmpty()) {
                     item {
                         ProgressCard(completed = filteredCompletedIds.size, total = filteredHabits.size)
                     }
                 }
+
+                // Schrittzählerkarte
                 item {
                     StepCountCard(steps = stepCount ?: 0)
                 }
-                if (selectedTab == 1) {
+
+                // Kontextbezogene Feature-Karten abhängig vom gewählten Tab
+                if (selectedTab == 1) { // Tab "Study"
                     item { PomodoroCard(onPomodoroClick = onPomodoroClick) }
                 }
-                if (selectedTab == 2) {
+                if (selectedTab == 2) { // Tab "Hobby"
                     item { PulseCard(onPulseClick = onPulseClick) }
                 }
+
+                // Behandlung einer leeren Liste
                 if (filteredHabits.isEmpty()) {
                     item {
                         Column(
@@ -224,6 +282,8 @@ fun HomeScreenContent(
                             modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                         )
                     }
+
+                    // Rendert die einzelnen Gewohnheitskarten
                     items(filteredHabits, key = { it.id }) { habit ->
                         HabitCard(
                             habit = habit,
@@ -232,7 +292,7 @@ fun HomeScreenContent(
                             onDelete = { onDeleteHabit(habit) },
                             onCardClick = { onHabitClick(habit) },
                             onCardLongClick = { onHabitLongClick(habit) },
-                            modifier = Modifier.animateItem()
+                            modifier = Modifier.animateItem() // Sorgt für flüssige Animationen beim Sortieren/Filtern
                         )
                     }
                     item { Spacer(Modifier.height(80.dp)) }
@@ -242,6 +302,13 @@ fun HomeScreenContent(
     }
 }
 
+/**
+ * UI-Komponente zur Visualisierung des tagesaktuellen Fortschritts.
+ * Zeigt einen horizontalen Fortschrittsbalken und einen Abschlusszähler an.
+ *
+ * @param completed Die Anzahl der bereits erledigten Gewohnheiten in der aktuellen Ansicht.
+ * @param total Die Gesamtanzahl der Gewohnheiten in der aktuellen Ansicht.
+ */
 @Composable
 private fun ProgressCard(completed: Int, total: Int) {
     val progress = if (total == 0) 0f else completed.toFloat() / total.toFloat()
@@ -269,6 +336,7 @@ private fun ProgressCard(completed: Int, total: Int) {
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp))
             )
+            // Motivationstext, wenn alle Aufgaben des Tages erfüllt wurden
             if (completed == total && total > 0) {
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -282,6 +350,12 @@ private fun ProgressCard(completed: Int, total: Int) {
     }
 }
 
+/**
+ * UI-Komponente zur Anzeige der tagesaktuellen Schrittzahl,
+ * erfasst durch den [StepCounterSensor] der Applikation.
+ *
+ * @param steps Die Anzahl der registrierten Schritte.
+ */
 @Composable
 private fun StepCountCard(steps: Int) {
     Card(
@@ -317,6 +391,18 @@ private fun StepCountCard(steps: Int) {
     }
 }
 
+/**
+ * Ein interaktiver Listen-Eintrag für eine einzelne Gewohnheit, inklusive Wischgesten-Unterstützung (Swipe-to-Dismiss).
+ * Erlaubt das Abschließen durch Wischen nach rechts oder das Löschen durch Wischen nach links.
+ *
+ * @param habit Das darzustellende Gewohnheits-Modell.
+ * @param isCompleted Gibt an, ob diese Gewohnheit heute bereits abgeschlossen wurde.
+ * @param onComplete Callback zur Invertierung des Abschlussstatus.
+ * @param onDelete Callback zum vollständigen Löschen der Gewohnheit.
+ * @param onCardClick Callback für einfache Klicks (Weiterleitung zum Detail-Screen).
+ * @param onCardLongClick Callback für langes Halten (Weiterleitung in den Bearbeitungsmodus).
+ * @param modifier Der Modifier für die äußere Box der Karte.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitCard(
@@ -328,14 +414,16 @@ fun HabitCard(
     onCardLongClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    // Sichert die aktuellen Callbacks für den Swipe-Zustand, um Recompositions zu vermeiden
     val currentOnComplete by rememberUpdatedState(onComplete)
     val currentOnDelete by rememberUpdatedState(onDelete)
 
+    // Konfiguriert den Zustand der Wischgeste und definiert die Aktionen bei Erreichen des Schwellenwerts
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
             when (value) {
-                SwipeToDismissBoxValue.StartToEnd -> { currentOnComplete(); false }
-                SwipeToDismissBoxValue.EndToStart -> { currentOnDelete(); true }
+                SwipeToDismissBoxValue.StartToEnd -> { currentOnComplete(); false } // Wisch nach rechts -> Abschließen, aber UI zurücksetzen
+                SwipeToDismissBoxValue.EndToStart -> { currentOnDelete(); true }    // Wisch nach links -> Löschen und UI-Element entfernen
                 else -> false
             }
         }
@@ -356,9 +444,15 @@ fun HabitCard(
     }
 }
 
+/**
+ * Rendert den farbigen Hintergrund, der während einer Wischgeste auf der [HabitCard] sichtbar wird.
+ *
+ * @param state Der aktuelle Zustand der SwipeToDismiss-Interaktion.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SwipeBackground(state: SwipeToDismissBoxState) {
+    // Animiert die Hintergrundfarbe sanft, je nach Wischrichtung (Grün = Erledigt, Rot = Löschen)
     val color by animateColorAsState(
         targetValue = when (state.targetValue) {
             SwipeToDismissBoxValue.StartToEnd -> Color(0xFF4CAF50)
@@ -374,6 +468,7 @@ private fun SwipeBackground(state: SwipeToDismissBoxState) {
         SwipeToDismissBoxValue.EndToStart -> Icons.Filled.Delete
         else -> null
     }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -388,6 +483,16 @@ private fun SwipeBackground(state: SwipeToDismissBoxState) {
     }
 }
 
+/**
+ * Die visuelle Kernkomponente der Gewohnheitskarte (Vordergrund).
+ * Beinhaltet Icon, Titel, Beschreibung und eine Checkbox zur direkten Interaktion.
+ *
+ * @param habit Die darzustellende Gewohnheit.
+ * @param isCompleted True, wenn die Gewohnheit heute abgeschlossen wurde. Ändert das Styling (durchgestrichen).
+ * @param onComplete Callback für den Klick auf die Checkbox.
+ * @param onCardClick Callback für den Klick auf den Kartenkörper.
+ * @param onCardLongClick Callback für einen langen Klick auf den Kartenkörper.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HabitCardContent(
@@ -397,6 +502,7 @@ private fun HabitCardContent(
     onCardClick: () -> Unit,
     onCardLongClick: () -> Unit
 ) {
+    // Ändert die Hintergrundfarbe und verringert die Opazität, wenn abgeschlossen
     val bgColor by animateColorAsState(
         targetValue = if (isCompleted)
             MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
@@ -445,6 +551,8 @@ private fun HabitCardContent(
                     )
                 }
             }
+
+            // Checkbox mit Fade-Animation beim Statuswechsel
             IconButton(onClick = onComplete) {
                 AnimatedContent(
                     targetState = isCompleted,
@@ -472,6 +580,12 @@ private fun HabitCardContent(
     }
 }
 
+/**
+ * Eine kontextspezifische UI-Karte (Call-to-Action), die den Start des Pomodoro-Timers anbietet.
+ * Wird typischerweise nur in der "Study"-Ansicht gerendert.
+ *
+ * @param onPomodoroClick Callback zum Starten des Pomodoro-Timers.
+ */
 @Composable
 private fun PomodoroCard(onPomodoroClick: () -> Unit) {
     Card(
@@ -508,6 +622,12 @@ private fun PomodoroCard(onPomodoroClick: () -> Unit) {
     }
 }
 
+/**
+ * Eine kontextspezifische UI-Karte (Call-to-Action), die den Start der Vitalmessung (Puls) anbietet.
+ * Wird typischerweise nur in der "Hobby"-Ansicht gerendert.
+ *
+ * @param onPulseClick Callback zum Starten der Pulsmessung.
+ */
 @Composable
 private fun PulseCard(onPulseClick: () -> Unit) {
     Card(
@@ -549,6 +669,9 @@ private fun PulseCard(onPulseClick: () -> Unit) {
     }
 }
 
+/**
+ * Standard-Vorschau für den Hauptbildschirm im Android Studio Preview-Werkzeug.
+ */
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {

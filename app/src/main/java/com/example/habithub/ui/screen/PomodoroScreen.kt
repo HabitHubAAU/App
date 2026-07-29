@@ -22,12 +22,25 @@ import com.example.habithub.R
 import com.example.habithub.ui.viewmodel.PomodoroPhase
 import com.example.habithub.ui.viewmodel.PomodoroViewModel
 
+/**
+ * Eine zustandsbehaftete UI-Komponente zur Darstellung und Steuerung des Pomodoro-Timers.
+ * Diese Ansicht konsumiert die benötigten Zustände (StateFlows) aus dem [PomodoroViewModel],
+ * darunter die verbleibende Zeit, die aktuelle Phase (Arbeitszeit oder Pause) sowie die konfigurierten
+ * Intervalldauern.
+ *
+ * Sie bietet visuelles Feedback über einen kreisförmigen Fortschrittsindikator und stellt
+ * Bedienelemente zum Starten, Pausieren, Zurücksetzen sowie zur Anpassung der Phasenlängen bereit.
+ *
+ * @param viewModel Das ViewModel zur Verwaltung der zugrundeliegenden Timer-Logik und der Phasenübergänge.
+ * @param onNavigateBack Ein Callback zur Navigation zurück zum vorherigen Bildschirm.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PomodoroScreen(
     viewModel: PomodoroViewModel,
     onNavigateBack: () -> Unit
 ) {
+    // Sammeln der reaktiven Zustände aus dem ViewModel
     val remainingSeconds by viewModel.remainingSeconds.collectAsState()
     val isRunning by viewModel.isRunning.collectAsState()
     val phase by viewModel.phase.collectAsState()
@@ -35,8 +48,10 @@ fun PomodoroScreen(
     val breakMinutes by viewModel.breakMinutes.collectAsState()
     val completedRounds by viewModel.completedRounds.collectAsState()
 
-    // Gesamtdauer der aktuellen Phase (für den Fortschritts-Kreis)
+    // Gesamtdauer der aktuellen Phase in Sekunden (für den Fortschritts-Kreis)
     val totalSeconds = if (phase == PomodoroPhase.WORK) workMinutes * 60 else breakMinutes * 60
+
+    // Berechnung des relativen Fortschritts (Wert zwischen 0.0 und 1.0)
     val progress = if (totalSeconds > 0) remainingSeconds.toFloat() / totalSeconds.toFloat() else 0f
 
     Scaffold(
@@ -66,7 +81,7 @@ fun PomodoroScreen(
         ) {
             Spacer(Modifier.height(16.dp))
 
-            // Aktuelle Phase
+            // Visuelle Hervorhebung der aktuellen Phase durch Farbgebung
             val phaseColor = if (phase == PomodoroPhase.WORK)
                 MaterialTheme.colorScheme.primary
             else
@@ -79,14 +94,14 @@ fun PomodoroScreen(
                 color = phaseColor
             )
 
-            // Anzahl abgeschlossener Lernrunden
+            // Anzeige der bisher abgeschlossenen Lernrunden
             Text(
                 text = stringResource(R.string.round_format, completedRounds + 1, completedRounds),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // Großer Timer mit Fortschritts-Kreis
+            // Großer Timer mit animiertem Fortschritts-Kreis
             Box(
                 modifier = Modifier.size(240.dp),
                 contentAlignment = Alignment.Center
@@ -106,7 +121,7 @@ fun PomodoroScreen(
                 )
             }
 
-            // Start/Pause + Reset
+            // Steuerungselemente: Start/Pause und Reset
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(
                     onClick = { if (isRunning) viewModel.pause() else viewModel.start() },
@@ -128,7 +143,7 @@ fun PomodoroScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // Zeiten einstellen
+            // Karte zur Konfiguration der Intervalldauern
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -138,6 +153,7 @@ fun PomodoroScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(stringResource(R.string.set_durations), style = MaterialTheme.typography.titleSmall)
+
                     DurationRow(
                         label = stringResource(R.string.phase_work),
                         minutes = workMinutes,
@@ -158,6 +174,17 @@ fun PomodoroScreen(
     }
 }
 
+/**
+ * Eine wiederverwendbare UI-Zeile zur Einstellung der Dauer einer spezifischen Pomodoro-Phase.
+ * Beinhaltet ein beschreibendes Textlabel sowie Plus- und Minus-Schaltflächen zur Anpassung des Wertes.
+ *
+ * @param label Die Bezeichnung der einzustellenden Phase (z. B. "Arbeitsphase" oder "Pause").
+ * @param minutes Der aktuell eingestellte Wert in Minuten.
+ * @param enabled Steuert die Interagierbarkeit der Schaltflächen. Um Inkonsistenzen zu vermeiden,
+ *                sollten diese deaktiviert sein, während der Timer aktiv läuft.
+ * @param onMinus Callback zur Verringerung der Minutenzahl.
+ * @param onPlus Callback zur Erhöhung der Minutenzahl.
+ */
 @Composable
 private fun DurationRow(
     label: String,
@@ -190,6 +217,13 @@ private fun DurationRow(
     }
 }
 
+/**
+ * Hilfsfunktion zur Formatierung einer absoluten Sekundenanzahl in einen
+ * standardisierten Zeit-String im Format "MM:SS" (z. B. 05:30).
+ *
+ * @param totalSeconds Die umzuwandelnde Gesamtzeit in Sekunden.
+ * @return Der formatierte Zeit-String mit zweistelligen Minuten und Sekunden.
+ */
 private fun formatTime(totalSeconds: Int): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60

@@ -19,6 +19,22 @@ import androidx.compose.ui.unit.dp
 import com.example.habithub.R
 import com.example.habithub.ui.theme.HabitHubTheme
 
+/**
+ * Eine zustandslose (stateless) UI-Komponente zur Verwaltung der globalen App-Einstellungen.
+ * Dieser Bildschirm ermöglicht die Konfiguration von UI-Darstellung (Dark Mode), Lokalisierung (Sprache)
+ * und Benachrichtigungsfreigaben.
+ *
+ * Die Komponente delegiert sämtliche Zustandsänderungen über Callback-Funktionen nach oben
+ * (State Hoisting), typischerweise an ein DataStore-gestütztes ViewModel.
+ *
+ * @param isDarkTheme Gibt an, ob das dunkle Design aktuell aktiv ist.
+ * @param onToggleTheme Callback-Funktion zum Umschalten zwischen hellem und dunklem Design.
+ * @param notificationsEnabled Gibt an, ob lokale Benachrichtigungen für Gewohnheiten aktiviert sind.
+ * @param onToggleNotifications Callback-Funktion zum Aktivieren oder Deaktivieren der Benachrichtigungen.
+ * @param currentLanguage Der Sprachcode der aktuell ausgewählten App-Sprache (z. B. "de" oder "en").
+ * @param onSelectLanguage Callback-Funktion zur Änderung der Lokalisierung zur Laufzeit.
+ * @param onNavigateBack Callback-Funktion zur Navigation zurück zum vorherigen Bildschirm.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -31,6 +47,9 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
+
+    // Dynamische Ermittlung der aktuellen App-Version aus dem PackageManager.
+    // Ein Fallback auf "1.0" wird verwendet, falls die PackageInfo nicht gelesen werden kann.
     val versionName = remember {
         runCatching {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
@@ -61,19 +80,19 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Darstellung
+            // Sektion: Darstellung (Theme-Konfiguration)
             SettingsSection(title = stringResource(R.string.section_appearance)) {
                 SettingsToggleRow(
                     icon = Icons.Filled.DarkMode,
                     title = stringResource(R.string.dark_mode),
                     subtitle = if (isDarkTheme) stringResource(R.string.dark_mode_on)
-                               else stringResource(R.string.dark_mode_off),
+                    else stringResource(R.string.dark_mode_off),
                     checked = isDarkTheme,
                     onCheckedChange = { onToggleTheme() }
                 )
             }
 
-            // Sprache
+            // Sektion: Lokalisierung (Sprachauswahl)
             SettingsSection(title = stringResource(R.string.section_language)) {
                 Row(
                     modifier = Modifier
@@ -96,7 +115,7 @@ fun SettingsScreen(
                 }
             }
 
-            // Benachrichtigungen
+            // Sektion: Benachrichtigungen
             SettingsSection(title = stringResource(R.string.section_notifications)) {
                 SettingsToggleRow(
                     icon = Icons.Filled.Notifications,
@@ -107,7 +126,7 @@ fun SettingsScreen(
                 )
             }
 
-            // Über die App
+            // Sektion: App-Metadaten
             SettingsSection(title = stringResource(R.string.section_about)) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -133,6 +152,13 @@ fun SettingsScreen(
     }
 }
 
+/**
+ * Eine wiederverwendbare Layout-Komponente für Einstellungssektionen.
+ * Gruppiert inhaltliche Einstellungen in einer visuell abgehobenen Card unter einem gemeinsamen Titel.
+ *
+ * @param title Der Bezeichner bzw. Überschrift der Sektion.
+ * @param content Der Composable-Inhalt (Slot), der innerhalb der Sektionskarte gerendert wird.
+ */
 @Composable
 private fun SettingsSection(
     title: String,
@@ -155,6 +181,16 @@ private fun SettingsSection(
     }
 }
 
+/**
+ * Eine wiederverwendbare UI-Zeile für boolesche Einstellungen.
+ * Besteht aus einem beschreibenden Icon, einem Titel, einem Untertitel und einem Schalter (Switch).
+ *
+ * @param icon Das Vector-Icon zur visuellen Repräsentation der Einstellung.
+ * @param title Der Haupttitel der Einstellung.
+ * @param subtitle Ein ergänzender Beschreibungstext oder der aktuelle Status.
+ * @param checked Der aktuelle Wahrheitswert der Einstellung.
+ * @param onCheckedChange Callback, der bei Interaktion mit dem Switch den neuen Zustand übergibt.
+ */
 @Composable
 private fun SettingsToggleRow(
     icon: ImageVector,
@@ -189,6 +225,9 @@ private fun SettingsToggleRow(
     }
 }
 
+/**
+ * Standard-Vorschau für den Einstellungsbildschirm im Android Studio Preview-Werkzeug.
+ */
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {

@@ -24,6 +24,17 @@ import com.example.habithub.ui.component.WeeklyBarChart
 import com.example.habithub.ui.theme.HabitHubTheme
 import com.example.habithub.ui.viewmodel.HabitViewModel
 
+/**
+ * Ein zustandsbehafteter (stateful) Bildschirm zur Anzeige der Gewohnheitsstatistiken.
+ * Beobachtet die relevanten Datenströme (StateFlows) aus dem [HabitViewModel], einschließlich
+ * der definierten Gewohnheiten und deren Abschlusshistorie.
+ *
+ * Diese Komponente delegiert das eigentliche Rendering an [StatsScreenContent] und injiziert
+ * die benötigten Berechnungsfunktionen direkt aus dem ViewModel, um die UI-Schicht von
+ * komplexer Geschäftslogik freizuhalten.
+ *
+ * @param viewModel Das ViewModel zur Bereitstellung der Daten und Statistik-Berechnungen.
+ */
 @Composable
 fun StatsScreen(viewModel: HabitViewModel) {
     val habits by viewModel.habits.collectAsState()
@@ -41,6 +52,20 @@ fun StatsScreen(viewModel: HabitViewModel) {
     )
 }
 
+/**
+ * Die zustandslose (stateless) UI-Kernkomponente für die Statistikansicht.
+ * Nimmt die Rohdaten sowie Referenzen auf Berechnungsfunktionen (als Lambdas) entgegen und
+ * generiert daraus eine aggregierte Übersichtskarte sowie detaillierte Statistik-Karten für
+ * jede einzelne Gewohnheit.
+ *
+ * @param habits Die Liste aller angelegten Gewohnheiten.
+ * @param recentCompletions Die Historie der Gewohnheitsabschlüsse (üblicherweise der letzten 90 Tage).
+ * @param todayCompletions Die am heutigen Tag abgeschlossenen Gewohnheiten.
+ * @param calculateStreak Funktion zur Ermittlung der aktuell laufenden Serie (Streak) einer Gewohnheit in Tagen.
+ * @param calculateBestStreak Funktion zur Ermittlung der historisch längsten Serie einer Gewohnheit.
+ * @param calculateCompletionRate Funktion zur Berechnung der Erfolgsquote (0.0f bis 1.0f).
+ * @param getWeeklyData Funktion zur Extraktion der Abschlussdaten der letzten 7 Tage für das Balkendiagramm.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreenContent(
@@ -64,6 +89,7 @@ fun StatsScreenContent(
         }
     ) { padding ->
         if (habits.isEmpty()) {
+            // Leerer Zustand (Empty State) für Nutzer ohne angelegte Gewohnheiten
             Box(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center
@@ -75,6 +101,7 @@ fun StatsScreenContent(
                 )
             }
         } else {
+            // Aggregation von globalen Metriken über alle Gewohnheiten hinweg
             val totalStreak = habits.sumOf { calculateStreak(it.id, recentCompletions) }
             val avgCompletionRate = habits
                 .map { calculateCompletionRate(it, recentCompletions) }
@@ -117,6 +144,14 @@ fun StatsScreenContent(
     }
 }
 
+/**
+ * UI-Komponente zur Darstellung der globalen App-Statistiken über alle Gewohnheiten hinweg.
+ *
+ * @param totalHabits Die Gesamtanzahl der vom Nutzer getrackten Gewohnheiten.
+ * @param completedToday Anzahl der heute erledigten Gewohnheiten.
+ * @param last90 Gesamtanzahl der Abschlüsse innerhalb des Analysezeitraums (z. B. 90 Tage).
+ * @param avgCompletionRate Die durchschnittliche Erfolgsquote aller Gewohnheiten.
+ */
 @Composable
 private fun OverallStatsCard(
     totalHabits: Int,
@@ -143,6 +178,13 @@ private fun OverallStatsCard(
     }
 }
 
+/**
+ * Hilfskomponente für die [OverallStatsCard] zur kompakten vertikalen Darstellung
+ * eines einzelnen Datenpunktes (Wert und zugehörige Beschriftung).
+ *
+ * @param value Der darzustellende statistische Wert (z. B. "12" oder "85%").
+ * @param label Die Beschreibung des Wertes.
+ */
 @Composable
 private fun StatItem(value: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -160,6 +202,16 @@ private fun StatItem(value: String, label: String) {
     }
 }
 
+/**
+ * Detailkarte zur Visualisierung der Statistiken einer einzelnen, spezifischen Gewohnheit.
+ * Enthält Basisinformationen (Icon, Name), Streaks, Abschlussrate und einen Verlaufs-Chart der letzten Woche.
+ *
+ * @param habit Das zugrundeliegende Gewohnheits-Modell.
+ * @param streak Die aktuell fortlaufende Serie an Tagen.
+ * @param bestStreak Der historische Rekord für fortlaufende Tage ohne Unterbrechung.
+ * @param completionRate Die Erfolgsquote für diese Gewohnheit (Wert zwischen 0.0f und 1.0f).
+ * @param weeklyData Eine Liste von 7 booleschen Werten, die den Status der letzten 7 Tage repräsentiert.
+ */
 @Composable
 private fun HabitStatCard(
     habit: Habit,
@@ -174,6 +226,7 @@ private fun HabitStatCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Kopfbereich: Icon, Titel und aktuelle Serie
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
@@ -199,6 +252,7 @@ private fun HabitStatCard(
                         else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                // Hervorgehobene Anzeige der aktuellen Serie (Streak)
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         streak.toString(),
@@ -212,6 +266,8 @@ private fun HabitStatCard(
             }
 
             Spacer(Modifier.height(10.dp))
+
+            // Sekundäre Statistiken (Rekord und Erfolgsquote)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -229,6 +285,8 @@ private fun HabitStatCard(
             }
 
             Spacer(Modifier.height(14.dp))
+
+            // Diagramm für den Wochenverlauf
             Text(
                 stringResource(R.string.last_7_days),
                 style = MaterialTheme.typography.labelMedium,
@@ -240,6 +298,13 @@ private fun HabitStatCard(
     }
 }
 
+/**
+ * Ein kompaktes UI-Element (Chip-Stil) zur Darstellung von Metadaten in der [HabitStatCard].
+ *
+ * @param label Der Titel der Metrik (z. B. "Beste Serie").
+ * @param value Der formatierte Wert der Metrik.
+ * @param modifier Erlaubt die externe Layout-Anpassung, insbesondere Gewichtung für gleichmäßige Breite.
+ */
 @Composable
 private fun MiniStatChip(label: String, value: String, modifier: Modifier = Modifier) {
     Surface(
@@ -262,6 +327,10 @@ private fun MiniStatChip(label: String, value: String, modifier: Modifier = Modi
     }
 }
 
+/**
+ * Standard-Vorschau für den Statistikbildschirm im Android Studio Preview-Werkzeug.
+ * Mockt die Berechnungslogik, um einen deterministischen Ansichtsstatus zu garantieren.
+ */
 @Preview(showBackground = true)
 @Composable
 fun StatsScreenPreview() {

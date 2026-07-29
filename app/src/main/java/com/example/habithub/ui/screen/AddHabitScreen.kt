@@ -30,16 +30,40 @@ import com.example.habithub.R
 import com.example.habithub.ui.theme.HabitHubTheme
 import com.example.habithub.ui.viewmodel.HabitViewModel
 
+/**
+ * Eine vordefinierte Liste von Emojis zur visuellen Repräsentation einer Gewohnheit.
+ */
 private val PRESET_EMOJIS = listOf(
     "⭐", "💪", "🏃", "📚", "💧", "🧘", "🎯", "🌙", "☀️",
     "🍎", "✍️", "🎵", "💊", "🧹", "💻", "🌿", "🔥", "❤️", "🎨", "🏋️"
 )
 
+/**
+ * Eine vordefinierte Liste von ARGB-Farbwerten (als Long) zur Einfärbung der UI-Elemente einer Gewohnheit.
+ */
 private val PRESET_COLORS = listOf(
     0xFF6750A4L, 0xFF00897BL, 0xFFE53935L, 0xFF43A047L,
     0xFF1E88E5L, 0xFFFB8C00L, 0xFFD81B60L, 0xFF546E7AL
 )
 
+/**
+ * Eine vordefinierte Liste von verfügbaren Kategorien für Gewohnheiten,
+ * bestehend aus einem internen Schlüssel und der zugehörigen String-Ressourcen-ID.
+ */
+private val CATEGORIES = listOf(
+    "hobby" to R.string.category_hobby,
+    "study" to R.string.category_study,
+    "work" to R.string.category_work
+)
+
+/**
+ * Ein Wrapper-Composable für den Bildschirm zum Erstellen einer neuen Gewohnheit.
+ * Diese Komponente bindet das [HabitViewModel] an die eigentliche UI-Darstellung
+ * ([AddHabitScreenContent]) und delegiert das finale Speichern der eingegebenen Daten an das ViewModel.
+ *
+ * @param viewModel Das ViewModel zur Verwaltung der Gewohnheitsdaten in der Datenbank.
+ * @param onNavigateBack Ein Callback zur Rückkehr zum vorherigen Bildschirm.
+ */
 @Composable
 fun AddHabitScreen(
     viewModel: HabitViewModel,
@@ -53,22 +77,28 @@ fun AddHabitScreen(
     )
 }
 
-private val CATEGORIES = listOf(
-    "hobby" to R.string.category_hobby,
-    "study" to R.string.category_study,
-    "work" to R.string.category_work
-)
-
+/**
+ * Die zustandsbehaftete (stateful) UI-Kernkomponente für das Formular zur Anlage einer neuen Gewohnheit.
+ * Verwaltet den internen Status der Eingabefelder und stellt interaktive Auswahlmöglichkeiten
+ * für Name, Beschreibung, Symbol, Farbe, Kategorie und Wiederholungsrhythmus bereit.
+ *
+ * @param onAddHabit Ein Callback, der beim Klick auf die Speichern-Schaltfläche ausgelöst wird
+ *                   und die validierten Formulardaten übergibt. Die Wochentage werden als Integer-Bitmaske übergeben.
+ * @param onNavigateBack Ein Callback zur Navigation, ausgelöst durch den Zurück-Pfeil oder nach erfolgreichem Speichern.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddHabitScreenContent(
     onAddHabit: (String, String, String, Long, Int, String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    // Lokale Zustände für die Eingabefelder des Formulars
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedEmoji by remember { mutableStateOf("⭐") }
     var selectedColor by remember { mutableLongStateOf(0xFF6750A4L) }
+
+    // Die ausgewählten Wochentage werden als Bitmaske gespeichert (Standard: 0b1111111 für alle 7 Tage)
     var selectedDays by remember { mutableIntStateOf(0b1111111) }
     var selectedCategory by remember { mutableStateOf("hobby") }
 
@@ -99,7 +129,7 @@ fun AddHabitScreenContent(
         ) {
             Spacer(Modifier.height(4.dp))
 
-            // Name
+            // Eingabefeld für den Namen der Gewohnheit (Pflichtfeld)
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -109,7 +139,7 @@ fun AddHabitScreenContent(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Description
+            // Eingabefeld für eine optionale Beschreibung
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
@@ -119,7 +149,7 @@ fun AddHabitScreenContent(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Emoji picker
+            // Horizontal scrollbare Liste zur Auswahl eines repräsentativen Emojis
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.section_icon), style = MaterialTheme.typography.labelLarge)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -145,7 +175,7 @@ fun AddHabitScreenContent(
                 }
             }
 
-            // Color picker
+            // Horizontal scrollbare Liste zur Auswahl der Design-Farbe der Gewohnheit
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.section_color), style = MaterialTheme.typography.labelLarge)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -162,6 +192,7 @@ fun AddHabitScreenContent(
                                 )
                                 .clickable { selectedColor = color }
                         ) {
+                            // Zeichnet ein Häkchen-Icon über der aktuell ausgewählten Farbe
                             if (selected) {
                                 Icon(
                                     Icons.Filled.Check,
@@ -175,7 +206,7 @@ fun AddHabitScreenContent(
                 }
             }
 
-            // Category selector
+            // Auswahlchips für die Zuweisung einer inhaltlichen Kategorie
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.section_category), style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -189,7 +220,8 @@ fun AddHabitScreenContent(
                 }
             }
 
-            // Day selector
+            // Auswahlchips für die Wochentage, an denen die Gewohnheit fällig ist.
+            // Nutzt bitweise Operationen zum Setzen oder Löschen des spezifischen Tages-Bits.
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.repeat_on), style = MaterialTheme.typography.labelLarge)
                 val dayLabels = stringArrayResource(R.array.weekday_repeat).toList()
@@ -200,9 +232,9 @@ fun AddHabitScreenContent(
                             selected = isSelected,
                             onClick = {
                                 selectedDays = if (isSelected)
-                                    selectedDays and (1 shl index).inv()
+                                    selectedDays and (1 shl index).inv() // Löscht das Bit
                                 else
-                                    selectedDays or (1 shl index)
+                                    selectedDays or (1 shl index)        // Setzt das Bit
                             },
                             label = { Text(label, fontSize = 12.sp) }
                         )
@@ -210,7 +242,7 @@ fun AddHabitScreenContent(
                 }
             }
 
-            // Preview
+            // Dynamische Vorschaukarte der Gewohnheit (wird nur angezeigt, wenn ein Name eingegeben wurde)
             if (name.isNotBlank()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -242,7 +274,7 @@ fun AddHabitScreenContent(
                 }
             }
 
-            // Save
+            // Schaltfläche zum Speichern (nur klickbar, wenn der Name nicht leer ist)
             Button(
                 onClick = {
                     if (name.isNotBlank()) {
@@ -264,6 +296,9 @@ fun AddHabitScreenContent(
     }
 }
 
+/**
+ * Standard-Vorschau für den [AddHabitScreenContent] in der Android Studio Design-Ansicht.
+ */
 @Preview(showBackground = true)
 @Composable
 fun AddHabitScreenPreview() {

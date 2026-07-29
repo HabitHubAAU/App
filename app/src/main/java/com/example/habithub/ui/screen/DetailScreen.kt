@@ -26,6 +26,20 @@ import com.example.habithub.ui.viewmodel.HabitViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * Ein zustandsbehafteter (stateful) Wrapper-Bildschirm für die Detailansicht einer spezifischen Gewohnheit.
+ * Diese Komponente extrahiert die benötigten Datenstrom-Zustände (StateFlows) aus dem [HabitViewModel],
+ * berechnet die aggregierten Statistiken (Streaks, Abschlussraten, Historie) für die ausgewählte Gewohnheit
+ * und delegiert die Darstellung an die zustandslose [DetailScreenContent]-Komponente.
+ *
+ * Falls die Gewohnheit nicht gefunden wird (z. B. nach einer Löschung), wird automatisch
+ * eine Navigation zurück ausgelöst.
+ *
+ * @param habitId Die eindeutige Datenbank-ID der anzuzeigenden Gewohnheit.
+ * @param viewModel Das ViewModel, welches die Daten-Streams und Berechnungslogik bereitstellt.
+ * @param onNavigateBack Ein Callback zur Navigation zum vorherigen Bildschirm.
+ * @param onEditHabit Ein Callback, der den Navigationspfad zum Bearbeitungsbildschirm für diese Gewohnheit aufruft.
+ */
 @Composable
 fun DetailScreen(
     habitId: Int,
@@ -55,6 +69,21 @@ fun DetailScreen(
     )
 }
 
+/**
+ * Die zustandslose (stateless) UI-Kernkomponente für die Darstellung der Gewohnheitsdetails.
+ * Baut das Layout mittels Scaffold und LazyColumn auf und integriert verschiedene
+ * Visualisierungs-Karten für den Status und die Historie.
+ *
+ * @param habit Das Datenmodell der darzustellenden Gewohnheit.
+ * @param streak Die aktuelle ununterbrochene Erfolgsserie in Tagen.
+ * @param bestStreak Die historisch längste ununterbrochene Erfolgsserie.
+ * @param completionRate Die prozentuale Abschlussrate (Wert zwischen 0.0 und 1.0).
+ * @param weeklyData Eine chronologische Liste der letzten 7 Tage als Boolean (true = abgeschlossen).
+ * @param monthlyData Eine chronologische Liste der letzten 30 Tage als Boolean (true = abgeschlossen).
+ * @param totalCompletions Die absolute Anzahl aller bisherigen Abschlüsse dieser Gewohnheit.
+ * @param onNavigateBack Callback zur Auslösung der Zurück-Navigation.
+ * @param onEditHabit Callback zur Aktivierung des Bearbeitungsmodus.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreenContent(
@@ -135,6 +164,12 @@ fun DetailScreenContent(
     }
 }
 
+/**
+ * UI-Komponente für den oberen Informationsbereich der Detailansicht.
+ * Visualisiert primäre Metadaten der Gewohnheit: Farbe, Emoji, Titel, Beschreibung und Erstelldatum.
+ *
+ * @param habit Die darzustellende Gewohnheit.
+ */
 @Composable
 private fun HabitHeaderCard(habit: Habit) {
     Card(
@@ -183,6 +218,15 @@ private fun HabitHeaderCard(habit: Habit) {
     }
 }
 
+/**
+ * Stellt eine horizontale Reihe (Row) von vier gleich großen Statistik-Karten dar,
+ * die einen schnellen Überblick über die Gesamt-Performance der Gewohnheit geben.
+ *
+ * @param streak Die aktuelle Erfolgsserie.
+ * @param bestStreak Die längste historische Erfolgsserie.
+ * @param completionRate Die Erfolgsquote (wird intern mit 100 multipliziert zur Prozentdarstellung).
+ * @param totalCompletions Die Gesamtanzahl der erfolgreichen Durchführungen.
+ */
 @Composable
 private fun StatsOverviewRow(
     streak: Int,
@@ -201,6 +245,14 @@ private fun StatsOverviewRow(
     }
 }
 
+/**
+ * Eine generische, wiederverwendbare UI-Komponente zur Darstellung eines einzelnen statistischen Wertes.
+ *
+ * @param icon Das Emoji zur visuellen Repräsentation der Statistik.
+ * @param value Der formatierte numerische Wert als String (z. B. "12" oder "85%").
+ * @param label Die Textbeschreibung der Metrik.
+ * @param modifier Der Modifier, welcher typischerweise ein Row-Weight für gleichmäßige Verteilung vorgibt.
+ */
 @Composable
 private fun DetailStatCard(icon: String, value: String, label: String, modifier: Modifier) {
     Card(
@@ -229,6 +281,14 @@ private fun DetailStatCard(icon: String, value: String, label: String, modifier:
     }
 }
 
+/**
+ * Zeigt die Historie der letzten 30 Tage in einem visuellen Raster-Layout (Heatmap) an.
+ * Die Daten werden in 6 Reihen mit jeweils 5 Spalten (Tagen) unterteilt,
+ * wobei das älteste Datum oben links und das aktuelle Datum unten rechts abgebildet wird.
+ *
+ * @param data Eine exakt 30 Elemente umfassende Liste mit den Abschluss-Status der letzten Tage.
+ * @param completedColor Die spezifische Theme-Farbe der Gewohnheit zur Markierung erfolgreicher Tage.
+ */
 @Composable
 private fun MonthlyHeatmapCard(data: List<Boolean>, completedColor: Color) {
     Card(
@@ -242,7 +302,7 @@ private fun MonthlyHeatmapCard(data: List<Boolean>, completedColor: Color) {
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(12.dp))
-            // 6 rows × 5 columns = 30 days, oldest top-left
+            // 6 Reihen × 5 Spalten = 30 Tage, der älteste Tag ist oben links
             data.chunked(5).forEach { rowData ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -264,6 +324,7 @@ private fun MonthlyHeatmapCard(data: List<Boolean>, completedColor: Color) {
                 Spacer(Modifier.height(6.dp))
             }
             Spacer(Modifier.height(4.dp))
+            // Legende zur farblichen Erklärung der Heatmap
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,

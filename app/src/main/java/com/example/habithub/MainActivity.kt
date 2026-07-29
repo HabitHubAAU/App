@@ -62,35 +62,57 @@ import com.example.habithub.ui.screen.SettingsScreen
 import kotlinx.coroutines.launch
 import java.util.Locale
 
+/**
+ * Der zentrale Einstiegspunkt (Entry Point) der HabitHub-Anwendung.
+ *
+ * Diese Klasse ist verantwortlich für:
+ * 1. Die Initialisierung der globalen ViewModels und deren Abhängigkeitsinjektion (Factories).
+ * 2. Die Verwaltung der Hardware-Sensoren gekoppelt an den Activity-Lebenszyklus.
+ * 3. Die dynamische Anforderung von Android-Laufzeitberechtigungen (Permissions).
+ * 4. Das Setup der Jetpack Compose UI-Umgebung und des Navigationsgraphen.
+ */
 class MainActivity : ComponentActivity() {
 
+    // Lokale Datenbank- und Repository-Initialisierung für Gewohnheiten
     private val viewModel: HabitViewModel by viewModels {
         val db = (application as HabitHubApplication).database
         HabitViewModelFactory(HabitRepository(db.habitDao(), db.completionDao()))
     }
 
+    // DataStore-Präferenzen für das Theme
     private val themeViewModel: ThemeViewModel by viewModels {
         ThemeViewModelFactory(ThemePreference(applicationContext))
     }
 
+    // DataStore-Präferenzen für den Pomodoro-Timer
     private val pomodoroViewModel: PomodoroViewModel by viewModels {
         PomodoroViewModelFactory(PomodoroPreference(applicationContext))
     }
 
+    // DataStore-Präferenzen für globale Einstellungen (z. B. Benachrichtigungen)
     private val settingsViewModel: SettingsViewModel by viewModels {
         SettingsViewModelFactory(NotificationPreference(applicationContext))
     }
 
+    // Hardware- und Systemkomponenten
     private lateinit var sensorManager: SensorManager
     private lateinit var shakeDetector: ShakeDetector
     private lateinit var stepCounterSensor: StepCounterSensor
     private lateinit var notificationManager: HabitNotificationManager
 
+    // UI-State für systemweite Einblendungen (Snackbars) und Sensordaten
     private val snackbarHostState = SnackbarHostState()
     private var stepCount: Int? by mutableStateOf(null)
+
+    // Status der angeforderten Laufzeitberechtigungen
     private var hasActivityRecognitionPermission: Boolean = false
     private var hasNotificationPermission: Boolean = false
 
+    /**
+     * Contract zur Anforderung der Berechtigung für physische Aktivität (Schrittzähler).
+     * Wird ab Android 10 (API 29) benötigt. Registriert den Sensor bei Erfolg oder
+     * zeigt eine Fehlermeldung via Snackbar an.
+     */
     private val activityRecognitionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -109,6 +131,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Contract zur Anforderung der Benachrichtigungsberechtigung.
+     * Wird ab Android 13 (API 33) benötigt (POST_NOTIFICATIONS).
+     */
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -123,17 +149,24 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Überschreibt den Basis-Kontext, um dynamische Sprachwechsel (Lokalisierung)
+     * zur Laufzeit zu ermöglichen.
+     */
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(LocaleHelper.wrap(newBase))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Ermöglicht das Zeichnen der UI hinter den Systemleisten (Status/Navigation)
         enableEdgeToEdge()
 
+        // Initialisierung der Systemdienste
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         notificationManager = HabitNotificationManager(this)
 
+        // Setup des Schüttel-Sensors: Zeigt bei Auslösung ein zufälliges Zitat an
         shakeDetector = ShakeDetector {
             val quote = resources.getStringArray(R.array.motivational_quotes).random()
             lifecycleScope.launch {
@@ -142,10 +175,12 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // Setup des Schrittzählers: Aktualisiert den reaktiven Compose-State
         stepCounterSensor = StepCounterSensor { steps ->
             stepCount = steps
         }
 
+        // Deklarativer UI-Einstieg (Jetpack Compose)
         setContent {
             val themeMode by themeViewModel.themeMode.collectAsState()
             val isDarkTheme = themeMode == ThemeMode.DARK
@@ -164,6 +199,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Bindet die Sensor-Registrierung an den Vordergrund-Lebenszyklus der App,
+     * um eine unnötige Batterieauslastung im Hintergrund zu vermeiden.
+     */
     override fun onResume() {
         super.onResume()
         ShakeDetector.register(sensorManager, shakeDetector)
@@ -171,6 +210,10 @@ class MainActivity : ComponentActivity() {
         ensureNotificationPermission()
     }
 
+    /**
+     * Prüft die Berechtigung für die Aktivitätserkennung abhängig von der Android-Version.
+     * Fordert die Berechtigung an oder registriert den Schrittzähler direkt.
+     */
     private fun ensureActivityRecognitionPermissionAndRegister() {
         val required = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
         if (!required) {
@@ -190,6 +233,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Prüft und fordert die Benachrichtigungsberechtigung (ab Android 13) an.
+     */
     private fun ensureNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             hasNotificationPermission = ContextCompat.checkSelfPermission(
@@ -205,6 +251,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Deregistriert Hardware-Sensoren, sobald die App den Fokus verliert,
+     * um Systemressourcen freizugeben.
+     */
     override fun onPause() {
         super.onPause()
         ShakeDetector.unregister(sensorManager, shakeDetector)
@@ -212,6 +262,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Compose-Wrapper für die HabitHub-App.
+ * Initialisiert den [NavHostController], der den Navigationszustand über
+ * den gesamten Compose-Lebenszyklus hinweg aufrechterhält.
+ */
 @Composable
 fun HabitHubApp(
     viewModel: HabitViewModel,
@@ -238,6 +293,13 @@ fun HabitHubApp(
     )
 }
 
+/**
+ * Das zentrale Layout- und Navigations-Framework der Anwendung.
+ *
+ * Bündelt alle UI-Komponenten in einem [Scaffold] und definiert den [NavHost] mit allen
+ * verfügbaren Bildschirmen (Screens). Verwaltet zudem app-weite Side-Effects (wie
+ * Benachrichtigungen bei Timer-Abschluss oder Konfetti-Animationen bei Gewohnheitsabschluss).
+ */
 @Composable
 fun HabitHubAppContent(
     viewModel: HabitViewModel,
@@ -250,6 +312,7 @@ fun HabitHubAppContent(
     notificationManager: HabitNotificationManager,
     settingsViewModel: SettingsViewModel
 ) {
+    // Sammlung globaler UI-Zustände aus den ViewModels
     val habits by viewModel.habits.collectAsState()
     val todayCompletions by viewModel.todayCompletions.collectAsState()
     val recentCompletions by viewModel.recentCompletions.collectAsState()
@@ -257,11 +320,16 @@ fun HabitHubAppContent(
     val notificationsEnabled by settingsViewModel.notificationsEnabled.collectAsState()
     val context = LocalContext.current
 
+    // Lokaler State für Side-Effects
     var initialLoad by remember { mutableStateOf(true) }
     var previousCompletionsSize by remember { mutableIntStateOf(0) }
     var initialPhaseLoad by remember { mutableStateOf(true) }
     var showConfetti by remember { mutableStateOf(false) }
 
+    /**
+     * Side-Effect: Reagiert auf neue Gewohnheitsabschlüsse des aktuellen Tages.
+     * Löst eine visuelle Belohnung (Konfetti) und eine Push-Benachrichtigung aus.
+     */
     LaunchedEffect(todayCompletions) {
         if (initialLoad) {
             initialLoad = false
@@ -277,6 +345,10 @@ fun HabitHubAppContent(
         previousCompletionsSize = todayCompletions.size
     }
 
+    /**
+     * Side-Effect: Reagiert auf Phasenwechsel im Pomodoro-Timer.
+     * Sendet kontextbezogene Benachrichtigungen (Fokus beendet / Pause beendet).
+     */
     LaunchedEffect(currentPomodoroPhase) {
         if (initialPhaseLoad) {
             initialPhaseLoad = false
@@ -295,6 +367,7 @@ fun HabitHubAppContent(
         }
     }
 
+    // Navigationsstatus auslesen, um die Sichtbarkeit der Bottom Navigation zu steuern
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
     val bottomNavScreens = listOf(Screen.Home, Screen.Add, Screen.Stats)
@@ -311,6 +384,7 @@ fun HabitHubAppContent(
                                 selected = currentRoute == screen.route,
                                 onClick = {
                                     navController.navigate(screen.route) {
+                                        // Verhindert einen unendlichen Back-Stack
                                         popUpTo(navController.graph.startDestinationId) { saveState = true }
                                         launchSingleTop = true
                                         restoreState = true
@@ -324,6 +398,7 @@ fun HabitHubAppContent(
                 }
             }
         ) { padding ->
+            // Zentraler Navigationsgraph
             NavHost(
                 navController = navController,
                 startDestination = Screen.Home.route,
@@ -397,6 +472,7 @@ fun HabitHubAppContent(
                         onToggleNotifications = { settingsViewModel.setNotificationsEnabled(it) },
                         currentLanguage = LocaleHelper.getLanguage(context) ?: Locale.getDefault().language,
                         onSelectLanguage = { lang ->
+                            // Erzwingt bei Sprachwechsel einen Neustart der Activity
                             if (LocaleHelper.getLanguage(context) != lang) {
                                 LocaleHelper.setLanguage(context, lang)
                                 (context as? ComponentActivity)?.recreate()
@@ -422,12 +498,17 @@ fun HabitHubAppContent(
             }
         }
 
+        // Overlay für den Konfetti-Effekt, gezeichnet über der restlichen UI
         if (showConfetti) {
             ConfettiEffect(onAnimationEnd = { showConfetti = false })
         }
     }
 }
 
+/**
+ * Bereitstellung einer Design-Zeit-Vorschau (Preview) für das Jetpack Compose Tooling.
+ * Simuliert einen Status mit Mock-Daten.
+ */
 @Preview(showBackground = true)
 @Composable
 fun HabitHubAppPreview() {

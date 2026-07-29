@@ -24,6 +24,23 @@ import androidx.compose.ui.unit.sp
 import com.example.habithub.R
 import java.util.Calendar
 
+/**
+ * Eine visuelle Jetpack Compose-Komponente, die ein wöchentliches Balkendiagramm darstellt.
+ * Dient primär der Visualisierung des Abschlussstatus einer Gewohnheit über die letzten sieben Tage.
+ *
+ * Das Diagramm berechnet die Labels für die Wochentage dynamisch rückwirkend vom heutigen Datum.
+ * Der äußerste rechte Balken repräsentiert immer "heute".
+ *
+ * @param weeklyData Eine Liste von Wahrheitswerten (Booleans), die den Abschlussstatus der einzelnen
+ *                   Tage repräsentiert (z. B. `true` für abgeschlossen). Die Liste sollte chronologisch
+ *                   von alt (Index 0) bis neu (letzter Index) geordnet sein und idealerweise 7 Elemente umfassen.
+ * @param barColor Die Füllfarbe, die für erfolgreich abgeschlossene Tage (`true`) verwendet wird.
+ *                 Tage mit dem Wert `false` erhalten automatisch eine unauffällige Systemfarbe (`surfaceVariant`).
+ * @param modifier Ein optionaler [Modifier] zur Anpassung des äußeren Row-Layouts.
+ * @param barWidth Die festgelegte Breite eines einzelnen Tages-Balkens.
+ * @param barHeight Die festgelegte maximale Höhe eines einzelnen Tages-Balkens.
+ * @param labelFontSize Die Schriftgröße der dynamisch generierten Wochentags-Labels unterhalb der Balken.
+ */
 @Composable
 fun WeeklyBarChart(
     weeklyData: List<Boolean>,
@@ -33,31 +50,44 @@ fun WeeklyBarChart(
     barHeight: Dp = 44.dp,
     labelFontSize: TextUnit = 9.sp
 ) {
+    // Lädt die lokalisierten Kurznamen der Wochentage (z. B. "Mo", "Di", "Mi") aus den Ressourcen.
+    // Es wird erwartet, dass Sonntag auf Index 0 oder 1 liegt, abhängig von der Calendar-Implementierung.
     val dayNames = stringArrayResource(R.array.weekday_short)
+
+    // Berechnet die korrekten Wochentags-Labels für die letzten 7 Tage (inklusive heute).
+    // Die Schleife zählt von 6 Tagen in der Vergangenheit herunter bis zu 0 (heute).
     val labels = (6 downTo 0).map { daysAgo ->
         val cal = Calendar.getInstance()
         cal.add(Calendar.DAY_OF_YEAR, -daysAgo)
+        // Calendar.DAY_OF_WEEK liefert Werte von 1 (Sonntag) bis 7 (Samstag).
+        // Um auf das Array zuzugreifen, muss 1 abgezogen werden.
         dayNames[cal.get(Calendar.DAY_OF_WEEK) - 1]
     }
+
+    // Das Haupt-Layout, das die einzelnen Balken horizontal nebeneinander platziert.
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
+        // Iteriert durch die übergebenen Statusdaten und generiert für jeden Tag eine Spalte.
         weeklyData.forEachIndexed { index, completed ->
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp) // Abstand zwischen Balken und Text
             ) {
+                // Der eigentliche Balken (Box), dessen Farbe je nach Abschlussstatus gesetzt wird.
                 Box(
                     modifier = Modifier
                         .width(barWidth)
                         .height(barHeight)
-                        .clip(RoundedCornerShape(6.dp))
+                        .clip(RoundedCornerShape(6.dp)) // Leicht abgerundete Ecken für eine moderne Optik
                         .background(
                             if (completed) barColor
                             else MaterialTheme.colorScheme.surfaceVariant
                         )
                 )
+                // Das zugehörige Wochentags-Label. Fällt zurück auf einen leeren String,
+                // falls 'weeklyData' mehr Elemente enthält als Labels berechnet wurden.
                 Text(
                     text = labels.getOrElse(index) { "" },
                     style = MaterialTheme.typography.labelSmall,
